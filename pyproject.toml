@@ -64,10 +64,10 @@ everythingtohtml = "everythingtohtml.__main__:main"
 e2h = "everythingtohtml.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/everythingtohtml/everythingtohtml"
-Repository = "https://github.com/everythingtohtml/everythingtohtml"
-Issues = "https://github.com/everythingtohtml/everythingtohtml/issues"
-Changelog = "https://github.com/everythingtohtml/everythingtohtml/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/He-wei-gui/everythingtohtml"
+Repository = "https://github.com/He-wei-gui/everythingtohtml"
+Issues = "https://github.com/He-wei-gui/everythingtohtml/issues"
+Changelog = "https://github.com/He-wei-gui/everythingtohtml/blob/main/CHANGELOG.md"
 
 [project.entry-points."everythingtohtml.converter"]
 # Third-party plugins register converters here. See docs/PLUGINS.md.

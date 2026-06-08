@@ -20,5 +20,5 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `everythingtohtml` / `e2h` command-line interface with stdin support.
 - Self-contained, dark-mode-aware HTML output with an overridable stylesheet.
 
-[Unreleased]: https://github.com/everythingtohtml/everythingtohtml/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/everythingtohtml/everythingtohtml/releases/tag/v0.1.0
+[Unreleased]: https://github.com/He-wei-gui/everythingtohtml/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/He-wei-gui/everythingtohtml/releases/tag/v0.1.0

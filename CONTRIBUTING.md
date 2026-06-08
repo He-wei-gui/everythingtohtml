@@ -6,7 +6,7 @@ docs, and tests are all very welcome.
 ## Development setup
 
 ```console
-git clone https://github.com/everythingtohtml/everythingtohtml.git
+git clone https://github.com/He-wei-gui/everythingtohtml.git
 cd everythingtohtml
 python -m venv .venv
 # Windows:  .venv\Scripts\activate
