@@ -7,6 +7,7 @@ Each converter is a small, self-contained class implementing the
 from __future__ import annotations
 
 from ._csv_converter import CsvConverter
+from ._doc_converter import DocConverter
 from ._docx_converter import DocxConverter
 from ._epub_converter import EpubConverter
 from ._html_converter import HtmlConverter
@@ -23,6 +24,7 @@ from ._yaml_converter import YamlConverter
 
 __all__ = [
     "CsvConverter",
+    "DocConverter",
     "DocxConverter",
     "EpubConverter",
     "HtmlConverter",

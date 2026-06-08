@@ -58,9 +58,14 @@ matters — headings, tables, lists, sections, links, images — while staying:
 | YAML | `.yaml`, `.yml` | `pip install everythingtohtml[yaml]` |
 | reStructuredText | `.rst` | `pip install everythingtohtml[rst]` |
 | Word | `.docx` | `pip install everythingtohtml[docx]` |
+| Word (legacy) | `.doc` | `pip install everythingtohtml[doc]` (LibreOffice recommended) |
 | Excel | `.xlsx`, `.xlsm` | `pip install everythingtohtml[xlsx]` |
 | PowerPoint | `.pptx` | `pip install everythingtohtml[pptx]` |
 | PDF | `.pdf` | `pip install everythingtohtml[pdf]` |
+
+> **Legacy `.doc`**: best results come from having [LibreOffice](https://www.libreoffice.org/)
+> installed (used headlessly for high-fidelity conversion). Without it, a
+> pure-Python `olefile` fallback recovers the text content.
 
 > Want everything? `pip install everythingtohtml[all]`
 
@@ -125,6 +130,38 @@ everythingtohtml https://hnrss.org/frontpage > hn.html
 ```
 
 The CLI is also available as `e2h` for the impatient.
+
+## Merging and comparing documents
+
+Need to collate a stack of Word files into one page, or see exactly what changed
+between two revisions? everythingtohtml does both — for **any** supported format.
+
+```python
+eth = EverythingToHtml()
+
+# Merge several documents into one HTML page (each becomes a section, with a TOC)
+merged = eth.merge(["intro.docx", "chapter1.doc", "appendix.pdf"])
+
+# Place them side by side for visual comparison
+columns = eth.merge(["draft-v1.docx", "draft-v2.docx"], layout="columns")
+
+# Produce a highlighted, line-by-line diff of two documents' text
+changes = eth.diff("spec-old.docx", "spec-new.docx")
+open("changes.html", "w", encoding="utf-8").write(changes.html)
+```
+
+From the CLI:
+
+```console
+# two or more sources are merged automatically
+everythingtohtml intro.docx chapter1.doc appendix.pdf -o handbook.html
+
+# side-by-side layout
+everythingtohtml old.docx new.docx --columns -o compare.html
+
+# highlighted diff of exactly two documents
+everythingtohtml spec-old.docx spec-new.docx --diff -o changes.html
+```
 
 ## Architecture
 

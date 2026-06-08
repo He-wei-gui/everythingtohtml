@@ -6,6 +6,13 @@ Examples
     everythingtohtml data.csv -o data.html
     everythingtohtml https://example.com/feed.rss
     cat notes.md | everythingtohtml --extension .md > notes.html
+
+    # merge several documents into one HTML (great for Word files)
+    everythingtohtml a.docx b.docx c.doc -o merged.html
+    everythingtohtml old.docx new.docx --columns -o side-by-side.html
+
+    # compare two documents with a highlighted line diff
+    everythingtohtml old.docx new.docx --diff -o changes.html
 """
 
 from __future__ import annotations
@@ -26,9 +33,9 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Convert files, URLs, or stdin into clean, self-contained HTML.",
     )
     parser.add_argument(
-        "source",
-        nargs="?",
-        help="Path or URL to convert. Omit (or use '-') to read from stdin.",
+        "sources",
+        nargs="*",
+        help="One or more paths/URLs. Two or more are merged; omit (or '-') for stdin.",
     )
     parser.add_argument(
         "-o",
@@ -48,6 +55,21 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--charset",
         help="Hint the source character encoding (e.g. 'utf-8').",
+    )
+    parser.add_argument(
+        "--columns",
+        action="store_true",
+        help="When merging multiple sources, lay them out side by side.",
+    )
+    parser.add_argument(
+        "--diff",
+        action="store_true",
+        help="Compare exactly two sources with a highlighted line diff.",
+    )
+    parser.add_argument(
+        "--no-toc",
+        action="store_true",
+        help="When merging, omit the table of contents.",
     )
     parser.add_argument(
         "--use-plugins",
@@ -71,12 +93,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         mimetype=args.mimetype,
         charset=args.charset,
     )
-
     engine = EverythingToHtml(enable_plugins=args.use_plugins)
+    sources = args.sources
 
     try:
-        if args.source and args.source != "-":
-            result = engine.convert(args.source, stream_info=stream_info)
+        if args.diff:
+            if len(sources) != 2:
+                parser.error("--diff requires exactly two sources")
+            result = engine.diff(sources[0], sources[1])
+        elif len(sources) > 1:
+            result = engine.merge(
+                sources,
+                layout="columns" if args.columns else "stacked",
+                include_toc=not args.no_toc,
+            )
+        elif len(sources) == 1 and sources[0] != "-":
+            result = engine.convert(sources[0], stream_info=stream_info)
         else:
             data = sys.stdin.buffer.read()
             result = engine.convert(data, stream_info=stream_info)

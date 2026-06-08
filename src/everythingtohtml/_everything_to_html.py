@@ -6,6 +6,7 @@ import io
 import mimetypes
 import os
 import sys
+from collections.abc import Iterable
 from typing import Any, BinaryIO
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
@@ -19,6 +20,7 @@ from ._exceptions import (
 from ._stream_info import StreamInfo
 from .converters import (
     CsvConverter,
+    DocConverter,
     DocxConverter,
     EpubConverter,
     HtmlConverter,
@@ -51,6 +53,7 @@ _BUILTIN_CONVERTERS: tuple[type[DocumentConverter], ...] = (
     RssConverter,
     RstConverter,
     EpubConverter,
+    DocConverter,
     DocxConverter,
     XlsxConverter,
     PptxConverter,
@@ -201,6 +204,68 @@ class EverythingToHtml:
             return self._convert(stream, info.copy_and_update(stream_info), **kwargs)
         raise UnsupportedFormatException(f"Unsupported URI scheme: {scheme!r}")
 
+    # -- multi-document composition ---------------------------------------
+
+    def merge(
+        self,
+        sources: Iterable[str | os.PathLike[str] | bytes | BinaryIO],
+        *,
+        title: str | None = None,
+        layout: str = "stacked",
+        include_toc: bool = True,
+        labels: list[str] | None = None,
+        **kwargs: Any,
+    ) -> DocumentConverterResult:
+        """Convert several sources and combine them into one HTML document.
+
+        ``layout="stacked"`` (default) renders them top-to-bottom with a table of
+        contents; ``layout="columns"`` places them side by side for comparison.
+        Each document's detected title is used as its heading unless ``labels`` is
+        given. Great for collating or comparing a set of Word documents.
+        """
+        from ._merge import body_fragment, build_merged_html
+
+        items: list[tuple[str, str]] = []
+        for index, source in enumerate(sources):
+            result = self.convert(source, **kwargs)
+            label = (
+                labels[index]
+                if labels and index < len(labels)
+                else (result.title or _source_label(source, index))
+            )
+            items.append((label, body_fragment(result.html)))
+
+        if not items:
+            raise ValueError("merge() requires at least one source")
+
+        html = build_merged_html(items, title=title, layout=layout, include_toc=include_toc)
+        return DocumentConverterResult(html, title=title)
+
+    def diff(
+        self,
+        left: str | os.PathLike[str] | bytes | BinaryIO,
+        right: str | os.PathLike[str] | bytes | BinaryIO,
+        *,
+        title: str | None = None,
+        left_label: str | None = None,
+        right_label: str | None = None,
+        **kwargs: Any,
+    ) -> DocumentConverterResult:
+        """Render a side-by-side line diff of two sources' text content."""
+        from ._merge import build_diff_html, plain_text_lines
+
+        left_result = self.convert(left, **kwargs)
+        right_result = self.convert(right, **kwargs)
+
+        html = build_diff_html(
+            left_label or left_result.title or _source_label(left, 0),
+            plain_text_lines(left_result.html),
+            right_label or right_result.title or _source_label(right, 1),
+            plain_text_lines(right_result.html),
+            title=title,
+        )
+        return DocumentConverterResult(html, title=title or "Document comparison")
+
     # -- internals ---------------------------------------------------------
 
     def _convert(
@@ -271,6 +336,13 @@ class EverythingToHtml:
 def _ext(path: str) -> str | None:
     ext = os.path.splitext(path)[1]
     return ext or None
+
+
+def _source_label(source: object, index: int) -> str:
+    """A human-friendly label for a source in merged/diffed output."""
+    if isinstance(source, (str, os.PathLike)):
+        return os.path.basename(os.fspath(source)) or os.fspath(source)
+    return f"Document {index + 1}"
 
 
 def _looks_like_uri(text: str) -> bool:

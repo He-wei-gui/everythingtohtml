@@ -12,6 +12,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   concatenates chapters into one HTML document.
 - **PDF** converter behind the new `pdf` extra (`pdfminer.six`): recovers prose as
   paragraphs, one section per page.
+- **Legacy `.doc`** converter behind the new `doc` extra: uses headless
+  LibreOffice when available for high-fidelity output, with a pure-Python
+  `olefile` text-extraction fallback otherwise.
+- **`EverythingToHtml.merge()`**: combine several sources into one HTML document,
+  with `layout="stacked"` (table of contents) or `layout="columns"` (side by
+  side). Exposed on the CLI by passing two or more sources, plus `--columns`.
+- **`EverythingToHtml.diff()`**: render a highlighted, line-by-line comparison of
+  two documents. Exposed on the CLI via `--diff`.
 
 ## [0.1.0] - 2026-06-08
 

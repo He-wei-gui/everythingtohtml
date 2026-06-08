@@ -47,6 +47,7 @@ dependencies = [
 
 [project.optional-dependencies]
 docx = ["mammoth>=1.6"]
+doc = ["olefile>=0.46"]
 xlsx = ["openpyxl>=3.1"]
 pptx = ["python-pptx>=0.6.21"]
 pdf = ["pdfminer.six>=20231228"]
@@ -54,6 +55,7 @@ rst = ["docutils>=0.20"]
 yaml = ["PyYAML>=6.0"]
 all = [
     "mammoth>=1.6",
+    "olefile>=0.46",
     "openpyxl>=3.1",
     "python-pptx>=0.6.21",
     "pdfminer.six>=20231228",
