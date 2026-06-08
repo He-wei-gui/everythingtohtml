@@ -9,11 +9,13 @@ from __future__ import annotations
 from ._csv_converter import CsvConverter
 from ._doc_converter import DocConverter
 from ._docx_converter import DocxConverter
+from ._eml_converter import EmlConverter
 from ._epub_converter import EpubConverter
 from ._html_converter import HtmlConverter
 from ._ipynb_converter import IpynbConverter
 from ._json_converter import JsonConverter
 from ._markdown_converter import MarkdownConverter
+from ._odt_converter import OdtConverter
 from ._pdf_converter import PdfConverter
 from ._plain_text_converter import PlainTextConverter
 from ._pptx_converter import PptxConverter
@@ -26,11 +28,13 @@ __all__ = [
     "CsvConverter",
     "DocConverter",
     "DocxConverter",
+    "EmlConverter",
     "EpubConverter",
     "HtmlConverter",
     "IpynbConverter",
     "JsonConverter",
     "MarkdownConverter",
+    "OdtConverter",
     "PdfConverter",
     "PlainTextConverter",
     "PptxConverter",

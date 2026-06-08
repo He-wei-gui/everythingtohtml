@@ -55,6 +55,8 @@ matters — headings, tables, lists, sections, links, images — while staying:
 | Jupyter notebook | `.ipynb` | — (built in) |
 | RSS / Atom feeds | `.rss`, `.atom` | — (built in) |
 | EPUB e-books | `.epub` | — (built in) |
+| Email | `.eml` | — (built in) |
+| OpenDocument Text | `.odt` | — (built in) |
 | YAML | `.yaml`, `.yml` | `pip install everythingtohtml[yaml]` |
 | reStructuredText | `.rst` | `pip install everythingtohtml[rst]` |
 | Word | `.docx` | `pip install everythingtohtml[docx]` |

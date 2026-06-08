@@ -10,6 +10,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **EPUB** converter (built in, no extra): follows the spine reading order and
   concatenates chapters into one HTML document.
+- **Email** (`.eml`) converter (built in): renders headers, body (HTML or plain),
+  and an attachment list; HTML bodies are stripped of active content.
+- **OpenDocument Text** (`.odt`) converter (built in): maps headings, paragraphs,
+  lists, and tables to semantic HTML using only core dependencies.
 - **PDF** converter behind the new `pdf` extra (`pdfminer.six`): recovers prose as
   paragraphs, one section per page.
 - **Legacy `.doc`** converter behind the new `doc` extra: uses headless
