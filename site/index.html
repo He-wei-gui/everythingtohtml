@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>everythingtohtml — convert any file into clean HTML</title>
+<meta name="description" content="A Python library and CLI that converts PDF, Word, Excel, PowerPoint, Markdown, CSV, JSON and more into clean, self-contained HTML. The structural inverse of markitdown.">
+<meta property="og:title" content="everythingtohtml">
+<meta property="og:description" content="Convert (almost) any file into clean, self-contained HTML — for humans and for LLMs.">
+<meta property="og:type" content="website">
+<style>
+  :root { color-scheme: light dark; --accent: #0b5cff; --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --card: #f7f7f9; --border: #e3e3e8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --accent: #6ea8fe; --bg: #0e0f12; --fg: #e8e8ea; --muted: #9aa0a6; --card: #17181c; --border: #2a2b31; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: var(--fg); background: var(--bg); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem; }
+  header.hero { text-align: center; padding: 5rem 1.25rem 3rem; }
+  .badge { display: inline-block; font-size: .8rem; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: .25rem .8rem; margin-bottom: 1.5rem; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); margin: .2rem 0; letter-spacing: -.02em; }
+  .tagline { font-size: clamp(1.05rem, 2.5vw, 1.35rem); color: var(--muted); max-width: 40rem; margin: 1rem auto 2rem; }
+  .cta { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: .7rem 1.4rem; border-radius: 8px; font-weight: 600; border: 1px solid var(--border); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .install { margin-top: 2rem; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .install code { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: .6rem 1rem; display: inline-block; font-size: .95rem; }
+  section { padding: 2.5rem 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 1.6rem; letter-spacing: -.01em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; }
+  .card h3 { margin: 0 0 .4rem; font-size: 1.05rem; }
+  .card p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .formats { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
+  .chip { background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: .3rem .8rem; font-size: .85rem; font-family: ui-monospace, monospace; }
+  pre.codeblock { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; overflow-x: auto; font-size: .9rem; line-height: 1.55; }
+  .tok-c { color: var(--muted); }
+  footer { text-align: center; color: var(--muted); padding: 3rem 1.25rem; font-size: .9rem; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <span class="badge">Open source · MIT · Python 3.10+</span>
+      <h1>everythingtohtml</h1>
+      <p class="tagline">Convert (almost) any file — PDF, Word, Excel, PowerPoint, Markdown, CSV, JSON and more — into clean, self-contained HTML. <strong>For humans and for LLMs.</strong></p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/He-wei-gui/everythingtohtml">★ Star on GitHub</a>
+        <a class="btn" href="https://github.com/He-wei-gui/everythingtohtml#readme">Read the docs</a>
+      </div>
+      <div class="install"><code>pip install "everythingtohtml[all]"</code></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section>
+      <h2>Why HTML instead of Markdown?</h2>
+      <p>Markdown is lossy — tables flatten, structure vanishes, slides collapse. everythingtohtml is the structural inverse of <a href="https://github.com/microsoft/markitdown">markitdown</a>: it lifts documents <em>up</em> into HTML that keeps the structure that matters.</p>
+      <div class="grid">
+        <div class="card"><h3>🧑‍💻 Human-friendly</h3><p>Open the output in any browser — no toolchain, dark-mode aware, restyleable.</p></div>
+        <div class="card"><h3>🤖 Model-friendly</h3><p>Explicit <code>&lt;table&gt;</code> / <code>&lt;section&gt;</code> structure that LLMs parse reliably for RAG and document QA.</p></div>
+        <div class="card"><h3>📦 Self-contained</h3><p>One valid HTML5 file per document, with a small embedded stylesheet.</p></div>
+        <div class="card"><h3>🔌 Pluggable</h3><p>A tiny converter contract and entry-point plugins — add a format in one small class.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Supported formats</h2>
+      <div class="formats">
+        <span class="chip">.pdf</span><span class="chip">.docx</span><span class="chip">.doc</span>
+        <span class="chip">.xlsx</span><span class="chip">.pptx</span><span class="chip">.epub</span>
+        <span class="chip">.md</span><span class="chip">.html</span><span class="chip">.csv</span>
+        <span class="chip">.tsv</span><span class="chip">.json</span><span class="chip">.jsonl</span>
+        <span class="chip">.ipynb</span><span class="chip">.rss</span><span class="chip">.atom</span>
+        <span class="chip">.yaml</span><span class="chip">.rst</span><span class="chip">.txt</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Use it in five seconds</h2>
+      <pre class="codeblock"><span class="tok-c"># Python</span>
+from everythingtohtml import EverythingToHtml
+
+eth = EverythingToHtml()
+result = eth.convert("quarterly-report.docx")
+open("report.html", "w").write(result.html)
+
+<span class="tok-c"># Merge a stack of Word docs — or diff two revisions</span>
+eth.merge(["intro.docx", "chapter1.doc", "appendix.pdf"])
+eth.diff("spec-old.docx", "spec-new.docx")</pre>
+      <pre class="codeblock"><span class="tok-c"># Command line</span>
+everythingtohtml report.docx -o report.html
+everythingtohtml old.docx new.docx --diff -o changes.html
+cat notes.md | everythingtohtml --extension .md &gt; notes.html</pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>Built in the open · <a href="https://github.com/He-wei-gui/everythingtohtml">github.com/He-wei-gui/everythingtohtml</a> · MIT License</p>
+    <p>Inspired by Microsoft <a href="https://github.com/microsoft/markitdown">markitdown</a>.</p>
+  </footer>
+</body>
+</html>
