@@ -6,6 +6,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **EPUB** converter (built in, no extra): follows the spine reading order and
+  concatenates chapters into one HTML document.
+- **PDF** converter behind the new `pdf` extra (`pdfminer.six`): recovers prose as
+  paragraphs, one section per page.
+
 ## [0.1.0] - 2026-06-08
 
 ### Added

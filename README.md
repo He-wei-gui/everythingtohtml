@@ -54,11 +54,13 @@ matters — headings, tables, lists, sections, links, images — while staying:
 | JSON / JSONL | `.json`, `.jsonl`, `.ndjson` | — (built in) |
 | Jupyter notebook | `.ipynb` | — (built in) |
 | RSS / Atom feeds | `.rss`, `.atom` | — (built in) |
+| EPUB e-books | `.epub` | — (built in) |
 | YAML | `.yaml`, `.yml` | `pip install everythingtohtml[yaml]` |
 | reStructuredText | `.rst` | `pip install everythingtohtml[rst]` |
 | Word | `.docx` | `pip install everythingtohtml[docx]` |
 | Excel | `.xlsx`, `.xlsm` | `pip install everythingtohtml[xlsx]` |
 | PowerPoint | `.pptx` | `pip install everythingtohtml[pptx]` |
+| PDF | `.pdf` | `pip install everythingtohtml[pdf]` |
 
 > Want everything? `pip install everythingtohtml[all]`
 

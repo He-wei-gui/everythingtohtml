@@ -8,10 +8,12 @@ from __future__ import annotations
 
 from ._csv_converter import CsvConverter
 from ._docx_converter import DocxConverter
+from ._epub_converter import EpubConverter
 from ._html_converter import HtmlConverter
 from ._ipynb_converter import IpynbConverter
 from ._json_converter import JsonConverter
 from ._markdown_converter import MarkdownConverter
+from ._pdf_converter import PdfConverter
 from ._plain_text_converter import PlainTextConverter
 from ._pptx_converter import PptxConverter
 from ._rss_converter import RssConverter
@@ -22,10 +24,12 @@ from ._yaml_converter import YamlConverter
 __all__ = [
     "CsvConverter",
     "DocxConverter",
+    "EpubConverter",
     "HtmlConverter",
     "IpynbConverter",
     "JsonConverter",
     "MarkdownConverter",
+    "PdfConverter",
     "PlainTextConverter",
     "PptxConverter",
     "RssConverter",

@@ -20,10 +20,12 @@ from ._stream_info import StreamInfo
 from .converters import (
     CsvConverter,
     DocxConverter,
+    EpubConverter,
     HtmlConverter,
     IpynbConverter,
     JsonConverter,
     MarkdownConverter,
+    PdfConverter,
     PlainTextConverter,
     PptxConverter,
     RssConverter,
@@ -48,9 +50,11 @@ _BUILTIN_CONVERTERS: tuple[type[DocumentConverter], ...] = (
     IpynbConverter,
     RssConverter,
     RstConverter,
+    EpubConverter,
     DocxConverter,
     XlsxConverter,
     PptxConverter,
+    PdfConverter,
 )
 
 
