@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a conversion that fails or produces wrong output
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to file a bug! Please fill in the details below.
+  - type: input
+    id: version
+    attributes:
+      label: everythingtohtml version
+      description: "Output of `everythingtohtml --version`"
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.12"
+    validations:
+      required: true
+  - type: input
+    id: format
+    attributes:
+      label: Input format / extension
+      placeholder: ".docx"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what did you get instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: A minimal code snippet or command. Attach a sample file if possible.
+      render: shell
+    validations:
+      required: true

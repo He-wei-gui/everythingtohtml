@@ -1,0 +1,12 @@
+# Normalize line endings: keep LF in the repo for all text files.
+* text=auto eol=lf
+
+# Treat these as binary so Git never touches their line endings.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary

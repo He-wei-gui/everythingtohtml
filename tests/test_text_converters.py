@@ -1,0 +1,134 @@
+"""Tests for the dependency-light, built-in text converters."""
+
+from __future__ import annotations
+
+import pytest
+
+from everythingtohtml import EverythingToHtml, StreamInfo
+
+
+@pytest.fixture
+def eth() -> EverythingToHtml:
+    return EverythingToHtml()
+
+
+def _convert(eth: EverythingToHtml, data: str, ext: str):
+    return eth.convert(data.encode("utf-8"), stream_info=StreamInfo(extension=ext))
+
+
+def test_markdown_renders_structure(eth: EverythingToHtml) -> None:
+    md = "# Title\n\nText with **bold** and a [link](https://example.com).\n"
+    result = _convert(eth, md, ".md")
+    assert result.html.startswith("<!DOCTYPE html>")
+    assert "<h1>Title</h1>" in result.html
+    assert "<strong>bold</strong>" in result.html
+    assert '<a href="https://example.com">link</a>' in result.html
+    assert result.title == "Title"
+
+
+def test_markdown_table(eth: EverythingToHtml) -> None:
+    md = "| a | b |\n|---|---|\n| 1 | 2 |\n"
+    result = _convert(eth, md, ".md")
+    assert "<table>" in result.html
+    assert "<th>a</th>" in result.html
+    assert "<td>1</td>" in result.html
+
+
+def test_csv_to_table(eth: EverythingToHtml) -> None:
+    result = _convert(eth, "name,age\nAlice,30\nBob,25\n", ".csv")
+    assert "<thead>" in result.html
+    assert "<th>name</th>" in result.html
+    assert "<td>Alice</td>" in result.html
+    assert result.html.count("<tr>") == 3  # header + 2 rows
+
+
+def test_csv_escapes_html(eth: EverythingToHtml) -> None:
+    result = _convert(eth, "col\n<script>\n", ".csv")
+    assert "<script>" not in result.html
+    assert "&lt;script&gt;" in result.html
+
+
+def test_tsv_uses_tab_delimiter(eth: EverythingToHtml) -> None:
+    result = _convert(eth, "a\tb\n1\t2\n", ".tsv")
+    assert "<th>a</th>" in result.html
+    assert "<th>b</th>" in result.html
+
+
+def test_json_tree(eth: EverythingToHtml) -> None:
+    result = _convert(eth, '{"name": "x", "values": [1, 2, true, null]}', ".json")
+    assert "json-tree" in result.html
+    assert "json-key" in result.html
+    assert "json-null" in result.html
+    assert '<span class="json-string">"x"</span>' in result.html
+
+
+def test_jsonl(eth: EverythingToHtml) -> None:
+    result = _convert(eth, '{"a": 1}\n{"a": 2}\n', ".jsonl")
+    assert "array (2)" in result.html
+
+
+def test_html_normalization_strips_scripts(eth: EverythingToHtml) -> None:
+    html = "<html><head><title>Doc</title></head><body><h1>Hi</h1><script>alert(1)</script></body></html>"
+    result = _convert(eth, html, ".html")
+    assert "alert(1)" not in result.html
+    assert "<h1>Hi</h1>" in result.html
+    assert result.title == "Doc"
+
+
+def test_plain_text_fallback(eth: EverythingToHtml) -> None:
+    result = _convert(eth, "just some text < & >", ".txt")
+    assert "<pre>" in result.html
+    assert "&lt; &amp; &gt;" in result.html
+
+
+def test_rss_feed(eth: EverythingToHtml) -> None:
+    rss = (
+        '<?xml version="1.0"?><rss version="2.0"><channel>'
+        "<title>My Feed</title><description>desc</description>"
+        "<item><title>Post One</title><link>https://x.com/1</link>"
+        "<description>Body</description></item></channel></rss>"
+    )
+    result = _convert(eth, rss, ".rss")
+    assert result.title == "My Feed"
+    assert "<article>" in result.html
+    assert 'href="https://x.com/1"' in result.html
+    assert "Post One" in result.html
+
+
+def test_atom_feed(eth: EverythingToHtml) -> None:
+    atom = (
+        '<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">'
+        "<title>Atom Feed</title>"
+        '<entry><title>Entry One</title><link href="https://x.com/a"/>'
+        "<summary>Summary</summary></entry></feed>"
+    )
+    result = _convert(eth, atom, ".atom")
+    assert result.title == "Atom Feed"
+    assert "Entry One" in result.html
+    assert 'href="https://x.com/a"' in result.html
+
+
+def test_ipynb(eth: EverythingToHtml, sample_notebook: str) -> None:
+    result = eth.convert(
+        sample_notebook.encode("utf-8"), stream_info=StreamInfo(extension=".ipynb")
+    )
+    assert result.title == "My Notebook"
+    assert "code-cell" in result.html
+    assert "print(&#x27;hello&#x27;)" in result.html or "print('hello')" in result.html
+    assert "hello" in result.html
+
+
+def test_yaml(eth: EverythingToHtml) -> None:
+    pytest.importorskip("yaml")
+    result = _convert(eth, "name: test\nitems:\n  - a\n  - b\n", ".yaml")
+    assert "json-tree" in result.html
+    assert "name" in result.html
+    assert "test" in result.html
+
+
+def test_rst(eth: EverythingToHtml) -> None:
+    pytest.importorskip("docutils")
+    rst = "Title\n=====\n\nSome *emphasised* text.\n"
+    result = _convert(eth, rst, ".rst")
+    assert "<em>emphasised</em>" in result.html
+    assert "Title" in result.html
