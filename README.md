@@ -1,20 +1,24 @@
 # everythingtohtml
 
-> Convert (almost) any file into clean, self-contained HTML — for humans and for LLMs.
+> Convert (almost) any file into clean, self-contained HTML — a universal file reader for your browser and scripts.
 
 [![CI](https://github.com/He-wei-gui/everythingtohtml/actions/workflows/ci.yml/badge.svg)](https://github.com/He-wei-gui/everythingtohtml/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/everythingtohtml.svg)](https://pypi.org/project/everythingtohtml/)
 [![Python versions](https://img.shields.io/pypi/pyversions/everythingtohtml.svg)](https://pypi.org/project/everythingtohtml/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+English | [中文发布文案](docs/LAUNCH.zh-CN.md) | [Live demo](https://he-wei-gui.github.io/everythingtohtml/)
+
 **everythingtohtml** is the spiritual inverse of tools like
 [markitdown](https://github.com/microsoft/markitdown): instead of flattening rich
 documents *down* to Markdown, it lifts a wide range of formats *up* into clean,
 styled, standalone HTML you can open in a browser, embed in a page, or feed to a
-model that reasons better over structured markup.
+workflow that wants structured markup.
 
 One small API. One CLI. A pluggable converter registry. No browser, no network
 required for local files.
+
+**中文简介**：everythingtohtml 是一个浏览器里的万能文件阅读器，也是一个 Python 包和 CLI。它可以把 PDF、Office、Markdown、CSV、JSON、EPUB 等常见文件转换成干净、自包含的 HTML，方便直接阅读、分享和自动化处理。
 
 ```python
 from everythingtohtml import EverythingToHtml
@@ -39,8 +43,8 @@ matters — headings, tables, lists, sections, links, images — while staying:
 
 - **Human-friendly** — open the output in any browser, no toolchain needed.
 - **Restyleable** — every document ships with a small, overridable stylesheet.
-- **Model-friendly** — LLMs parse explicit `<table>`/`<section>` structure
-  reliably, which is great for RAG ingestion and document QA.
+- **Structure-preserving** — explicit `<table>`/`<section>` markup keeps tables,
+  sections, and nested content easy to inspect and process.
 - **Self-contained** — one file, valid HTML5, dark-mode aware.
 
 ## Supported formats
