@@ -15,6 +15,7 @@ from ._base_converter import DocumentConverter, DocumentConverterResult
 from ._exceptions import (
     FailedConversionAttempt,
     FileConversionException,
+    MissingDependencyException,
     UnsupportedFormatException,
 )
 from ._stream_info import StreamInfo
@@ -281,6 +282,7 @@ class EverythingToHtml:
         enriched = self._sniff(stream, stream_info)
 
         attempts: list[FailedConversionAttempt] = []
+        missing_dependency: MissingDependencyException | None = None
         for converter in self._ordered:
             stream.seek(0)
             try:
@@ -292,9 +294,19 @@ class EverythingToHtml:
             stream.seek(0)
             try:
                 return converter.convert(stream, enriched, **kwargs)
+            except MissingDependencyException as exc:
+                # Remember the first actionable "install this extra" signal so it
+                # can be surfaced if nothing else handles the input.
+                if missing_dependency is None:
+                    missing_dependency = exc
+                attempts.append(FailedConversionAttempt(converter, sys.exc_info()))
             except Exception:
                 attempts.append(FailedConversionAttempt(converter, sys.exc_info()))
 
+        # A missing optional dependency is the most useful thing to report, so it
+        # takes precedence over the generic "all converters failed" message.
+        if missing_dependency is not None:
+            raise missing_dependency
         if attempts:
             raise FileConversionException(attempts=attempts)
         raise UnsupportedFormatException(

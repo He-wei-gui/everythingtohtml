@@ -30,3 +30,6 @@ Thumbs.db
 *.local.html
 /scratch/
 examples/output/
+
+# Built in CI for the in-browser demo
+site/wheels/

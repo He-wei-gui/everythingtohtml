@@ -11,6 +11,7 @@ from everythingtohtml import (
     DocumentConverter,
     DocumentConverterResult,
     EverythingToHtml,
+    MissingDependencyException,
     StreamInfo,
     UnsupportedFormatException,
 )
@@ -129,6 +130,25 @@ def test_failed_converter_falls_through() -> None:
     # Markdown converter should still produce output after Bomb fails.
     result = eth.convert(b"# Survived\n", stream_info=StreamInfo(extension=".md"))
     assert "Survived" in result.html
+
+
+def test_missing_dependency_propagates() -> None:
+    """A converter's MissingDependencyException must surface (not be hidden as a
+    generic FileConversionException), so callers see the actionable install hint."""
+
+    class NeedsExtra(DocumentConverter):
+        def accepts(self, file_stream, stream_info, **kwargs) -> bool:
+            return stream_info.normalized_extension() == ".needy"
+
+        def convert(self, file_stream, stream_info, **kwargs):
+            raise MissingDependencyException("pip install everythingtohtml[needy]")
+
+    eth = EverythingToHtml()
+    eth.register_converter(NeedsExtra())
+    # Binary, non-text bytes so the plain-text fallback declines and NeedsExtra is
+    # the only converter that accepts.
+    with pytest.raises(MissingDependencyException):
+        eth.convert(b"\x00\x01\x02\xff", stream_info=StreamInfo(extension=".needy"))
 
 
 def test_result_text_content_alias(eth: EverythingToHtml) -> None:

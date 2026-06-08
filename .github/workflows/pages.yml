@@ -1,13 +1,16 @@
 name: Deploy site
 
-# Publishes the static landing page in site/ to GitHub Pages.
-# One-time: repo Settings -> Pages -> Source: "GitHub Actions".
+# Publishes the static landing page + in-browser demo in site/ to GitHub Pages.
+# `enablement: true` turns Pages on automatically the first time this runs, so no
+# manual Settings step is required.
 
 on:
   push:
     branches: [main]
     paths:
       - "site/**"
+      - "src/**"
+      - "pyproject.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -28,9 +31,24 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the wheel for the in-browser (Pyodide) demo
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel --outdir site/wheels
+
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
       - id: deployment
         uses: actions/deploy-pages@v4

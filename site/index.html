@@ -3,105 +3,146 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>everythingtohtml — convert any file into clean HTML</title>
-<meta name="description" content="A Python library and CLI that converts PDF, Word, Excel, PowerPoint, Markdown, CSV, JSON and more into clean, self-contained HTML. The structural inverse of markitdown.">
-<meta property="og:title" content="everythingtohtml">
-<meta property="og:description" content="Convert (almost) any file into clean, self-contained HTML — for humans and for LLMs.">
-<meta property="og:type" content="website">
+<title>everythingtohtml — the universal file reader, in your browser</title>
+<meta name="description" content="Drag in a PDF, Word, Excel, EPUB, Markdown, CSV, JSON or email file and read it instantly as clean HTML — entirely in your browser, nothing uploaded.">
+<meta property="og:title" content="everythingtohtml — universal file reader">
+<meta property="og:description" content="Drop any file, read it as clean HTML. Runs 100% in your browser, nothing is uploaded.">
 <style>
-  :root { color-scheme: light dark; --accent: #0b5cff; --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --card: #f7f7f9; --border: #e3e3e8; }
-  @media (prefers-color-scheme: dark) {
-    :root { --accent: #6ea8fe; --bg: #0e0f12; --fg: #e8e8ea; --muted: #9aa0a6; --card: #17181c; --border: #2a2b31; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: var(--fg); background: var(--bg); }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  .wrap { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem; }
-  header.hero { text-align: center; padding: 5rem 1.25rem 3rem; }
-  .badge { display: inline-block; font-size: .8rem; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: .25rem .8rem; margin-bottom: 1.5rem; }
-  h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); margin: .2rem 0; letter-spacing: -.02em; }
-  .tagline { font-size: clamp(1.05rem, 2.5vw, 1.35rem); color: var(--muted); max-width: 40rem; margin: 1rem auto 2rem; }
-  .cta { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
-  .btn { display: inline-block; padding: .7rem 1.4rem; border-radius: 8px; font-weight: 600; border: 1px solid var(--border); }
-  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .install { margin-top: 2rem; }
-  code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  .install code { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: .6rem 1rem; display: inline-block; font-size: .95rem; }
-  section { padding: 2.5rem 0; border-top: 1px solid var(--border); }
-  h2 { font-size: 1.6rem; letter-spacing: -.01em; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; }
-  .card h3 { margin: 0 0 .4rem; font-size: 1.05rem; }
-  .card p { margin: 0; color: var(--muted); font-size: .95rem; }
-  .formats { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
-  .chip { background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: .3rem .8rem; font-size: .85rem; font-family: ui-monospace, monospace; }
-  pre.codeblock { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; overflow-x: auto; font-size: .9rem; line-height: 1.55; }
-  .tok-c { color: var(--muted); }
-  footer { text-align: center; color: var(--muted); padding: 3rem 1.25rem; font-size: .9rem; border-top: 1px solid var(--border); }
+  :root { color-scheme: light dark; --accent: #0b5cff; --accent2:#7c3aed; --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --card:#f7f7f9; --border:#e3e3e8; }
+  @media (prefers-color-scheme: dark){ :root{ --accent:#6ea8fe; --accent2:#b794f6; --bg:#0e0f12; --fg:#e8e8ea; --muted:#9aa0a6; --card:#17181c; --border:#2a2b31; } }
+  *{box-sizing:border-box;} html,body{margin:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:var(--fg);background:var(--bg);}
+  a{color:var(--accent);text-decoration:none;} a:hover{text-decoration:underline;}
+  .wrap{max-width:62rem;margin:0 auto;padding:0 1.25rem;}
+  header.hero{text-align:center;padding:3.5rem 1.25rem 1rem;}
+  .badge{display:inline-block;font-size:.8rem;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.25rem .8rem;margin-bottom:1.2rem;}
+  h1{font-size:clamp(2.1rem,5.5vw,3.2rem);margin:.2rem 0;letter-spacing:-.02em;}
+  .tagline{font-size:clamp(1rem,2.4vw,1.25rem);color:var(--muted);max-width:40rem;margin:1rem auto 1.5rem;}
+
+  /* Demo */
+  .demo{margin:1.5rem auto 0;}
+  #dropzone{border:2px dashed var(--border);border-radius:16px;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:.15s;background:var(--card);}
+  #dropzone:hover,#dropzone.drag{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card));}
+  #dropzone .big{font-size:1.25rem;font-weight:600;margin-bottom:.3rem;}
+  #dropzone .sub{color:var(--muted);font-size:.92rem;}
+  .samples{margin:.9rem 0 0;font-size:.88rem;color:var(--muted);}
+  .samples button{font:inherit;color:var(--accent);background:none;border:1px solid var(--border);border-radius:999px;padding:.15rem .7rem;margin:.15rem;cursor:pointer;}
+  .samples button:hover{border-color:var(--accent);}
+  #status{min-height:1.4rem;margin:.9rem 0 0;font-size:.9rem;color:var(--muted);}
+  #status.err{color:#d33;}
+  .privacy{font-size:.82rem;color:var(--muted);margin-top:.4rem;}
+
+  .viewer{display:none;margin-top:1.25rem;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card);}
+  .viewer.show{display:block;}
+  .vbar{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .vbar .name{font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .vbar .chip{font-family:ui-monospace,monospace;font-size:.78rem;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:.1rem .55rem;}
+  .vbar .spacer{flex:1;}
+  .vbar button{font:inherit;font-size:.82rem;border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:8px;padding:.25rem .7rem;cursor:pointer;}
+  .vbar button:hover{border-color:var(--accent);}
+  #preview{width:100%;height:60vh;border:0;background:#fff;}
+  #source{display:none;margin:0;max-height:60vh;overflow:auto;padding:1rem;font-size:.8rem;font-family:ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;}
+
+  section{padding:2.5rem 0;border-top:1px solid var(--border);}
+  h2{font-size:1.5rem;letter-spacing:-.01em;}
+  .formats{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;}
+  .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .8rem;font-size:.85rem;font-family:ui-monospace,monospace;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;margin-top:1.25rem;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;}
+  .card h3{margin:0 0 .4rem;font-size:1.05rem;} .card p{margin:0;color:var(--muted);font-size:.95rem;}
+  .cta{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;}
+  .btn{display:inline-block;padding:.65rem 1.3rem;border-radius:8px;font-weight:600;border:1px solid var(--border);}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  pre.codeblock{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;overflow-x:auto;font-size:.88rem;}
+  .tok-c{color:var(--muted);}
+  footer{text-align:center;color:var(--muted);padding:3rem 1.25rem;font-size:.9rem;border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
   <header class="hero">
     <div class="wrap">
-      <span class="badge">Open source · MIT · Python 3.10+</span>
-      <h1>everythingtohtml</h1>
-      <p class="tagline">Convert (almost) any file — PDF, Word, Excel, PowerPoint, Markdown, CSV, JSON and more — into clean, self-contained HTML. <strong>For humans and for LLMs.</strong></p>
-      <div class="cta">
-        <a class="btn primary" href="https://github.com/He-wei-gui/everythingtohtml">★ Star on GitHub</a>
-        <a class="btn" href="https://github.com/He-wei-gui/everythingtohtml#readme">Read the docs</a>
+      <span class="badge">100% in your browser · nothing uploaded · MIT open source</span>
+      <h1>The universal file reader</h1>
+      <p class="tagline">Drop in a PDF, Word, Excel, EPUB, Markdown, CSV, JSON or email file — and read it instantly as clean HTML. No installs, no upload, no server.</p>
+
+      <div class="demo wrap" style="padding:0;max-width:48rem;">
+        <div id="dropzone" tabindex="0" role="button" aria-label="Drop a file or click to browse">
+          <div class="big">📄 Drop a file here</div>
+          <div class="sub">or click to browse · your file never leaves this page</div>
+        </div>
+        <input type="file" id="file-input" hidden>
+        <div class="samples">
+          Try a sample:
+          <button data-sample="md">Markdown</button>
+          <button data-sample="csv">CSV</button>
+          <button data-sample="json">JSON</button>
+          <button data-sample="eml">Email</button>
+        </div>
+        <div id="status" aria-live="polite">Booting the in-browser Python runtime…</div>
+        <div class="privacy">🔒 Conversion runs entirely on your device via WebAssembly. Files are never sent anywhere.</div>
+
+        <div class="viewer" id="viewer">
+          <div class="vbar">
+            <span class="name" id="v-name">result</span>
+            <span class="chip" id="v-ext">—</span>
+            <span class="spacer"></span>
+            <button id="btn-preview" aria-pressed="true">Preview</button>
+            <button id="btn-source" aria-pressed="false">HTML source</button>
+            <button id="btn-download">Download .html</button>
+          </div>
+          <iframe id="preview" sandbox="allow-same-origin" title="Rendered preview"></iframe>
+          <pre id="source"></pre>
+        </div>
       </div>
-      <div class="install"><code>pip install "everythingtohtml[all]"</code></div>
     </div>
   </header>
 
   <main class="wrap">
     <section>
-      <h2>Why HTML instead of Markdown?</h2>
-      <p>Markdown is lossy — tables flatten, structure vanishes, slides collapse. everythingtohtml is the structural inverse of <a href="https://github.com/microsoft/markitdown">markitdown</a>: it lifts documents <em>up</em> into HTML that keeps the structure that matters.</p>
-      <div class="grid">
-        <div class="card"><h3>🧑‍💻 Human-friendly</h3><p>Open the output in any browser — no toolchain, dark-mode aware, restyleable.</p></div>
-        <div class="card"><h3>🤖 Model-friendly</h3><p>Explicit <code>&lt;table&gt;</code> / <code>&lt;section&gt;</code> structure that LLMs parse reliably for RAG and document QA.</p></div>
-        <div class="card"><h3>📦 Self-contained</h3><p>One valid HTML5 file per document, with a small embedded stylesheet.</p></div>
-        <div class="card"><h3>🔌 Pluggable</h3><p>A tiny converter contract and entry-point plugins — add a format in one small class.</p></div>
-      </div>
-    </section>
-
-    <section>
-      <h2>Supported formats</h2>
+      <h2>Reads almost anything</h2>
       <div class="formats">
         <span class="chip">.pdf</span><span class="chip">.docx</span><span class="chip">.doc</span>
         <span class="chip">.xlsx</span><span class="chip">.pptx</span><span class="chip">.epub</span>
-        <span class="chip">.md</span><span class="chip">.html</span><span class="chip">.csv</span>
-        <span class="chip">.tsv</span><span class="chip">.json</span><span class="chip">.jsonl</span>
-        <span class="chip">.ipynb</span><span class="chip">.rss</span><span class="chip">.atom</span>
-        <span class="chip">.eml</span><span class="chip">.odt</span>
-        <span class="chip">.yaml</span><span class="chip">.rst</span><span class="chip">.txt</span>
+        <span class="chip">.odt</span><span class="chip">.eml</span><span class="chip">.md</span>
+        <span class="chip">.html</span><span class="chip">.csv</span><span class="chip">.tsv</span>
+        <span class="chip">.json</span><span class="chip">.jsonl</span><span class="chip">.ipynb</span>
+        <span class="chip">.rss</span><span class="chip">.atom</span><span class="chip">.yaml</span>
+        <span class="chip">.rst</span><span class="chip">.txt</span>
+      </div>
+      <p style="color:var(--muted);margin-top:1rem;font-size:.92rem;">The lightweight formats convert instantly in-browser. Heavier ones (Office, PDF) load their parser on first use — or run blazing-fast from the command line.</p>
+    </section>
+
+    <section>
+      <h2>Why people use it</h2>
+      <div class="grid">
+        <div class="card"><h3>👀 Read anything, anywhere</h3><p>Open obscure or office formats in any browser without the app that made them.</p></div>
+        <div class="card"><h3>🔒 Private by design</h3><p>Runs locally via WebAssembly — your documents never touch a server.</p></div>
+        <div class="card"><h3>🧩 Merge &amp; diff</h3><p>Combine many documents into one page, or compare two revisions side by side.</p></div>
+        <div class="card"><h3>⚙️ Library + CLI too</h3><p><code>pip install everythingtohtml</code> for automation, RAG pipelines, and scripts.</p></div>
+      </div>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/He-wei-gui/everythingtohtml">★ Star on GitHub</a>
+        <a class="btn" href="https://github.com/He-wei-gui/everythingtohtml#readme">Docs</a>
       </div>
     </section>
 
     <section>
-      <h2>Use it in five seconds</h2>
-      <pre class="codeblock"><span class="tok-c"># Python</span>
-from everythingtohtml import EverythingToHtml
+      <h2>Same engine, on the command line</h2>
+      <pre class="codeblock"><span class="tok-c"># install</span>
+pip install "everythingtohtml[all]"
 
-eth = EverythingToHtml()
-result = eth.convert("quarterly-report.docx")
-open("report.html", "w").write(result.html)
-
-<span class="tok-c"># Merge a stack of Word docs — or diff two revisions</span>
-eth.merge(["intro.docx", "chapter1.doc", "appendix.pdf"])
-eth.diff("spec-old.docx", "spec-new.docx")</pre>
-      <pre class="codeblock"><span class="tok-c"># Command line</span>
+<span class="tok-c"># convert, merge, or diff</span>
 everythingtohtml report.docx -o report.html
-everythingtohtml old.docx new.docx --diff -o changes.html
-cat notes.md | everythingtohtml --extension .md &gt; notes.html</pre>
+everythingtohtml a.docx b.docx c.pdf -o handbook.html
+everythingtohtml spec-old.docx spec-new.docx --diff -o changes.html</pre>
     </section>
   </main>
 
   <footer>
-    <p>Built in the open · <a href="https://github.com/He-wei-gui/everythingtohtml">github.com/He-wei-gui/everythingtohtml</a> · MIT License</p>
-    <p>Inspired by Microsoft <a href="https://github.com/microsoft/markitdown">markitdown</a>.</p>
+    <p>Built in the open · <a href="https://github.com/He-wei-gui/everythingtohtml">github.com/He-wei-gui/everythingtohtml</a> · MIT</p>
+    <p>Inspired by Microsoft <a href="https://github.com/microsoft/markitdown">markitdown</a>. Powered by <a href="https://pyodide.org/">Pyodide</a>.</p>
   </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
