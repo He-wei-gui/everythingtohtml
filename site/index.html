@@ -29,6 +29,10 @@
   .samples{margin:.9rem 0 0;font-size:.88rem;color:var(--muted);}
   .samples button{font:inherit;color:var(--accent);background:none;border:1px solid var(--border);border-radius:999px;padding:.15rem .7rem;margin:.15rem;cursor:pointer;}
   .samples button:hover{border-color:var(--accent);}
+  .modebar{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:.8rem 0 0;font-size:.86rem;}
+  .modebar button{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:.25rem .8rem;cursor:pointer;}
+  .modebar button[aria-pressed="true"]{color:#fff;background:var(--accent);border-color:var(--accent);}
+  .modehint{margin:.35rem 0 0;color:var(--muted);font-size:.82rem;}
   #status{min-height:1.4rem;margin:.9rem 0 0;font-size:.9rem;color:var(--muted);}
   #status.err{color:#d33;}
   .privacy{font-size:.82rem;color:var(--muted);margin-top:.4rem;}
@@ -41,6 +45,7 @@
   .vbar .spacer{flex:1;}
   .vbar button{font:inherit;font-size:.82rem;border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:8px;padding:.25rem .7rem;cursor:pointer;}
   .vbar button:hover{border-color:var(--accent);}
+  .vbar button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;}
   #preview{width:100%;height:60vh;border:0;background:#fff;}
   #source{display:none;margin:0;max-height:60vh;overflow:auto;padding:1rem;font-size:.8rem;font-family:ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;}
 
@@ -73,7 +78,7 @@
           <div class="big">📄 Drop a file here / 拖文件到这里</div>
           <div class="sub">or click to browse · your file never leaves this page / 也可以点击选择文件，文件不会离开本页</div>
         </div>
-        <input type="file" id="file-input" hidden>
+        <input type="file" id="file-input" multiple hidden>
         <div class="samples">
           Try a sample / 试试样例：
           <button data-sample="md">Markdown</button>
@@ -81,6 +86,11 @@
           <button data-sample="json">JSON</button>
           <button data-sample="eml">Email</button>
         </div>
+        <div class="modebar" aria-label="Conversion mode">
+          <button id="mode-auto" aria-pressed="true">Auto / 自动</button>
+          <button id="mode-diff" aria-pressed="false">Diff two files / 对比两个文件</button>
+        </div>
+        <p class="modehint">Drop multiple files to merge them automatically. Switch to Diff before dropping exactly two files. / 拖入多个文件会自动合并；切到 Diff 后拖入两个文件即可对比。</p>
         <div id="status" aria-live="polite">Booting the in-browser Python runtime…</div>
         <div class="privacy">🔒 Conversion runs entirely on your device via WebAssembly. Files are never sent anywhere. / 转换全程在你的设备上运行，文件不会上传。</div>
 
@@ -89,9 +99,9 @@
             <span class="name" id="v-name">result</span>
             <span class="chip" id="v-ext">—</span>
             <span class="spacer"></span>
-            <button id="btn-preview" aria-pressed="true">Preview</button>
-            <button id="btn-source" aria-pressed="false">HTML source</button>
-            <button id="btn-download">Download .html</button>
+            <button id="btn-preview" type="button" aria-pressed="true">Preview / 预览</button>
+            <button id="btn-source" type="button" aria-pressed="false">HTML source / 源码</button>
+            <button id="btn-download" type="button">Download .html / 下载</button>
           </div>
           <iframe id="preview" sandbox="allow-same-origin" title="Rendered preview"></iframe>
           <pre id="source"></pre>

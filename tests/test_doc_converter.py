@@ -16,6 +16,7 @@ from everythingtohtml import EverythingToHtml, FileConversionException, StreamIn
 from everythingtohtml.converters import DocConverter
 from everythingtohtml.converters._doc_converter import (
     _clean_word_text,
+    _extract_text_from_worddocument,
     _printable_ratio,
 )
 
@@ -57,3 +58,21 @@ def test_clean_word_text_maps_control_chars() -> None:
     # Stray control chars are dropped (no space inserted); blank-line runs collapse
     # to at most a single blank line.
     assert _clean_word_text("x\x01y\r\r\rz") == "xy\n\nz"
+
+
+def test_doc_text_extraction_stops_at_fc_mac() -> None:
+    text = "题目：《现代医养信息系统》课程论文；正文宋体四号"
+    encoded = text.encode("utf-16-le")
+    fc_min = 0x800
+    fc_mac = fc_min + len(encoded)
+    raw = bytearray(fc_mac + 80)
+    raw[0x18:0x1C] = fc_min.to_bytes(4, "little")
+    raw[0x1C:0x20] = fc_mac.to_bytes(4, "little")
+    raw[0x4C:0x50] = len(text).to_bytes(4, "little")
+    raw[fc_min:fc_mac] = encoded
+    raw[fc_mac:] = "ࠀࠂࠈࠊࠌࠎࠐ틗웊웺뻊뫊꿺".encode("utf-16-le")
+
+    extracted = _extract_text_from_worddocument(bytes(raw))
+
+    assert text in extracted
+    assert "꿺" not in extracted

@@ -6,6 +6,7 @@ skips cleanly if its dependency is unavailable.
 
 from __future__ import annotations
 
+import base64
 import io
 
 import pytest
@@ -57,12 +58,19 @@ def test_xlsx(eth: EverythingToHtml) -> None:
 
 def test_pptx(eth: EverythingToHtml) -> None:
     pptx = pytest.importorskip("pptx")
+    util = pytest.importorskip("pptx.util")
 
     presentation = pptx.Presentation()
     layout = presentation.slide_layouts[1]
     slide = presentation.slides.add_slide(layout)
     slide.shapes.title.text = "Slide Title"
     slide.placeholders[1].text = "Bullet point one"
+    slide.shapes.add_picture(
+        io.BytesIO(base64.b64decode(_ONE_PIXEL_PNG)),
+        util.Inches(1),
+        util.Inches(2),
+        width=util.Inches(3),
+    )
     buffer = io.BytesIO()
     presentation.save(buffer)
     buffer.seek(0)
@@ -71,3 +79,12 @@ def test_pptx(eth: EverythingToHtml) -> None:
     assert "Slide Title" in result.html
     assert "Bullet point one" in result.html
     assert 'class="slide"' in result.html
+    assert 'class="pptx-image"' in result.html
+    assert "data:image/png;base64," in result.html
+    assert 'class="pptx-shape"' in result.html
+    assert "position: absolute" in result.html
+
+
+_ONE_PIXEL_PNG = (
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6X+Xk8AAAAASUVORK5CYII="
+)

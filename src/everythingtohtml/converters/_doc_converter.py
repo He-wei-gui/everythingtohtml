@@ -20,6 +20,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import unicodedata
 from typing import Any, BinaryIO
 
 from .._base_converter import DocumentConverter, DocumentConverterResult
@@ -161,21 +162,30 @@ def _extract_doc_text(stream: BinaryIO, olefile: Any) -> str:
     if len(raw) < 0x20:
         return ""
 
+    return _extract_text_from_worddocument(raw)
+
+
+def _extract_text_from_worddocument(raw: bytes) -> str:
+    """Extract and clean the main text span from a ``WordDocument`` stream."""
     fc_min = int.from_bytes(raw[0x18:0x1C], "little")
+    fc_mac = int.from_bytes(raw[0x1C:0x20], "little")
     ccp_text = int.from_bytes(raw[0x4C:0x50], "little") if len(raw) >= 0x50 else 0
     if fc_min <= 0 or fc_min >= len(raw):
         fc_min = 0x800 if len(raw) > 0x800 else 0
+    if fc_mac <= fc_min or fc_mac > len(raw):
+        fc_mac = len(raw)
 
-    span = raw[fc_min:]
+    span = raw[fc_min:fc_mac]
     candidates = []
     # 8-bit (cp1252) interpretation.
-    eight = span[: ccp_text or len(span)]
+    eight = span[: min(ccp_text or len(span), len(span))]
     candidates.append(eight.decode("cp1252", errors="ignore"))
+    candidates.append(eight.decode("gb18030", errors="ignore"))
     # 16-bit (UTF-16LE) interpretation.
-    sixteen_len = (ccp_text * 2) if ccp_text else len(span)
+    sixteen_len = min((ccp_text * 2) if ccp_text else len(span), len(span))
     candidates.append(span[:sixteen_len].decode("utf-16-le", errors="ignore"))
 
-    best = max(candidates, key=_printable_ratio)
+    best = max(candidates, key=_text_quality_score)
     return _clean_word_text(best)
 
 
@@ -186,7 +196,17 @@ def _printable_ratio(text: str) -> float:
     return printable / len(text)
 
 
+def _text_quality_score(text: str) -> float:
+    """Prefer real prose over binary decoded into printable-looking glyphs."""
+    if not text:
+        return 0.0
+    printable = _printable_ratio(text)
+    suspicious = sum(1 for ch in text if _is_suspicious_glyph(ch))
+    return printable - (suspicious / len(text))
+
+
 def _clean_word_text(text: str) -> str:
+    text = _trim_garbage_tail(text)
     out_chars: list[str] = []
     for ch in text:
         code = ord(ch)
@@ -207,3 +227,49 @@ def _clean_word_text(text: str) -> str:
         if line or (cleaned and cleaned[-1]):
             cleaned.append(line)
     return "\n".join(cleaned).strip()
+
+
+def _trim_garbage_tail(text: str) -> str:
+    """Drop long decoded-binary tails without touching ordinary prose."""
+    run_start: int | None = None
+    run_length = 0
+    meaningful = 0
+    for index, ch in enumerate(text):
+        if ch.isspace() or ord(ch) < 0x20:
+            run_start = None
+            run_length = 0
+            continue
+        if _is_suspicious_glyph(ch):
+            if run_start is None:
+                run_start = index
+                run_length = 0
+            run_length += 1
+            if meaningful >= 20 and run_length >= 12:
+                return text[:run_start]
+        else:
+            meaningful += 1
+            run_start = None
+            run_length = 0
+    return text
+
+
+def _is_suspicious_glyph(ch: str) -> bool:
+    code = ord(ch)
+    if ch in "\r\n\t ":
+        return False
+    if code < 0x20:
+        return True
+    if 0x20 <= code <= 0x007E:
+        return False
+    if 0x00A0 <= code <= 0x024F:  # Latin supplement/extended.
+        return False
+    if 0x2000 <= code <= 0x206F:  # General punctuation.
+        return False
+    if 0x3000 <= code <= 0x30FF:  # CJK punctuation + Japanese kana.
+        return False
+    if 0x3400 <= code <= 0x4DBF or 0x4E00 <= code <= 0x9FFF or 0xF900 <= code <= 0xFAFF:
+        return False
+    if 0xFF00 <= code <= 0xFFEF:  # Fullwidth forms.
+        return False
+    category = unicodedata.category(ch)
+    return category.startswith("C") or category.startswith("M") or code > 0x02AF

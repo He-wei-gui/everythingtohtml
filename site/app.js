@@ -1,14 +1,13 @@
 /* everythingtohtml — in-browser universal reader, powered by Pyodide.
  *
  * Everything runs client-side: we load a CPython runtime (Pyodide) in WebAssembly,
- * pip-install the everythingtohtml wheel into it, and call the same conversion
+ * install the everythingtohtml wheel into it, and call the same conversion
  * engine the CLI uses. No file ever leaves the page.
  */
 
 const PYODIDE_VERSION = "0.26.4";
 const PYODIDE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
 
-// Optional-dependency extras -> the PyPI package micropip should install on demand.
 const EXTRA_PACKAGE = {
   docx: "mammoth",
   xlsx: "openpyxl",
@@ -17,6 +16,11 @@ const EXTRA_PACKAGE = {
   yaml: "PyYAML",
   rst: "docutils",
   doc: "olefile",
+};
+
+const PYODIDE_PACKAGE_DEPS = {
+  "python-pptx": ["lxml"],
+  "pdfminer.six": ["cryptography"],
 };
 
 const SAMPLES = {
@@ -57,6 +61,8 @@ const els = {
   btnPreview: document.getElementById("btn-preview"),
   btnSource: document.getElementById("btn-source"),
   btnDownload: document.getElementById("btn-download"),
+  modeAuto: document.getElementById("mode-auto"),
+  modeDiff: document.getElementById("mode-diff"),
 };
 
 let pyodide = null;
@@ -64,8 +70,8 @@ let micropip = null;
 const installed = new Set();
 let currentHtml = "";
 let currentName = "result";
+let currentMode = "auto";
 
-// Test/automation hooks.
 window.__e2h = { ready: false, lastHtml: null, error: null };
 
 function setStatus(text, isError = false) {
@@ -75,11 +81,11 @@ function setStatus(text, isError = false) {
 
 async function boot() {
   try {
-    setStatus("Loading the in-browser Python runtime…");
+    setStatus("Loading the in-browser Python runtime… / 正在加载浏览器内 Python 运行时…");
     const mod = await import(PYODIDE_URL + "pyodide.mjs");
     pyodide = await mod.loadPyodide({ indexURL: PYODIDE_URL });
 
-    setStatus("Installing the converters…");
+    setStatus("Installing the converters… / 正在安装转换器…");
     await pyodide.loadPackage("micropip");
     micropip = pyodide.pyimport("micropip");
 
@@ -93,20 +99,39 @@ from everythingtohtml._exceptions import MissingDependencyException
 _eth = EverythingToHtml()
 _EXTRA_PKG = ${JSON.stringify(EXTRA_PACKAGE).replace(/"/g, "'")}
 
+def _missing_package(exc):
+    msg = str(exc)
+    for extra, pkg in _EXTRA_PKG.items():
+        if '[' + extra + ']' in msg:
+            return pkg
+    return None
+
 def _convert_path(path):
     try:
         return ['ok', _eth.convert(path).html]
     except MissingDependencyException as exc:
-        msg = str(exc)
-        for extra, pkg in _EXTRA_PKG.items():
-            if '[' + extra + ']' in msg:
-                return ['need', pkg]
-        return ['error', msg]
+        pkg = _missing_package(exc)
+        return ['need', pkg] if pkg else ['error', str(exc)]
+    except Exception as exc:
+        return ['error', f'{type(exc).__name__}: {exc}']
+
+def _convert_paths(paths, mode, labels):
+    try:
+        if mode == 'diff':
+            if len(paths) != 2:
+                return ['error', 'Diff mode needs exactly two files. / Diff 模式需要正好两个文件。']
+            return ['ok', _eth.diff(paths[0], paths[1], left_label=labels[0], right_label=labels[1]).html]
+        if len(paths) > 1:
+            return ['ok', _eth.merge(paths, labels=labels, title='Merged files').html]
+        return ['ok', _eth.convert(paths[0]).html]
+    except MissingDependencyException as exc:
+        pkg = _missing_package(exc)
+        return ['need', pkg] if pkg else ['error', str(exc)]
     except Exception as exc:
         return ['error', f'{type(exc).__name__}: {exc}']
 `);
 
-    setStatus("Ready — drop a file to read it.");
+    setStatus("Ready — drop one or more files to read them. / 已就绪，拖入一个或多个文件即可阅读。");
     window.__e2h.ready = true;
   } catch (err) {
     setStatus("Failed to start the in-browser runtime: " + err.message, true);
@@ -117,7 +142,7 @@ def _convert_path(path):
 
 async function convertBytes(name, bytes) {
   if (!pyodide) {
-    setStatus("Still starting up — one moment…");
+    setStatus("Still starting up — one moment… / 还在启动，请稍等…");
     return;
   }
   currentName = name;
@@ -125,33 +150,27 @@ async function convertBytes(name, bytes) {
   const ext = dot >= 0 ? name.slice(dot).toLowerCase() : "";
   const path = "/tmp/input" + ext;
 
-  setStatus(`Converting ${name}…`);
+  setStatus(`Converting ${name}… / 正在转换 ${name}…`);
   pyodide.FS.writeFile(path, bytes);
   pyodide.globals.set("_p", path);
 
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < 6; attempt++) {
     const proxy = await pyodide.runPythonAsync("_convert_path(_p)");
     const [kind, payload] = proxy.toJs();
     proxy.destroy();
 
     if (kind === "ok") {
       showResult(name, ext || "—", payload);
-      setStatus(`Converted ${name}.`);
+      setStatus(`Converted ${name}. / 已转换 ${name}。`);
       return;
     }
     if (kind === "need") {
-      if (installed.has(payload)) break;
-      setStatus(`Loading the ${payload} parser (first use)…`);
+      setStatus(`Loading the ${payload} parser… / 正在加载 ${payload} 解析器…`);
       try {
-        await micropip.install(payload);
-        installed.add(payload);
+        await installParser(payload);
         continue;
       } catch (err) {
-        setStatus(
-          `This format needs the “${payload}” parser, which couldn’t load in the ` +
-            `browser. It works from the command line — see the GitHub repo.`,
-          true,
-        );
+        setStatus(parserLoadError(payload), true);
         return;
       }
     }
@@ -159,12 +178,100 @@ async function convertBytes(name, bytes) {
     window.__e2h.error = payload;
     return;
   }
-  setStatus("Could not convert this file in the browser.", true);
+  setStatus("Could not convert this file in the browser. / 浏览器里暂时无法转换这个文件。", true);
+}
+
+async function convertFiles(files, mode = currentMode) {
+  const list = Array.from(files);
+  if (list.length === 0) return;
+  if (list.length === 1) {
+    const buf = new Uint8Array(await list[0].arrayBuffer());
+    await convertBytes(list[0].name, buf);
+    return;
+  }
+  if (mode === "diff" && list.length !== 2) {
+    setStatus("Diff mode needs exactly two files. / Diff 模式需要正好两个文件。", true);
+    return;
+  }
+  if (!pyodide) {
+    setStatus("Still starting up — one moment… / 还在启动，请稍等…");
+    return;
+  }
+
+  const paths = [];
+  const labels = [];
+  for (const [index, file] of list.entries()) {
+    const dot = file.name.lastIndexOf(".");
+    const ext = dot >= 0 ? file.name.slice(dot).toLowerCase() : "";
+    const path = `/tmp/input-${index}${ext}`;
+    pyodide.FS.writeFile(path, new Uint8Array(await file.arrayBuffer()));
+    paths.push(path);
+    labels.push(file.name);
+  }
+
+  const action = mode === "diff" ? "Comparing" : "Merging";
+  const actionZh = mode === "diff" ? "正在对比" : "正在合并";
+  setStatus(`${action} ${list.length} files… / ${actionZh} ${list.length} 个文件…`);
+  pyodide.globals.set("_paths_json", JSON.stringify(paths));
+  pyodide.globals.set("_labels_json", JSON.stringify(labels));
+  pyodide.globals.set("_mode", mode);
+
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const proxy = await pyodide.runPythonAsync(`
+import json
+_convert_paths(json.loads(_paths_json), _mode, json.loads(_labels_json))
+`);
+    const [kind, payload] = proxy.toJs();
+    proxy.destroy();
+
+    if (kind === "ok") {
+      const name = mode === "diff" ? "comparison.html" : "merged.html";
+      showResult(name, mode === "diff" ? "diff" : "merge", payload);
+      setStatus(
+        `${mode === "diff" ? "Compared" : "Merged"} ${list.length} files. / ` +
+          `已${mode === "diff" ? "对比" : "合并"} ${list.length} 个文件。`,
+      );
+      return;
+    }
+    if (kind === "need") {
+      setStatus(`Loading the ${payload} parser… / 正在加载 ${payload} 解析器…`);
+      try {
+        await installParser(payload);
+        continue;
+      } catch (err) {
+        setStatus(parserLoadError(payload), true);
+        return;
+      }
+    }
+    setStatus("Could not convert these files: " + payload, true);
+    window.__e2h.error = payload;
+    return;
+  }
+  setStatus("Could not convert these files in the browser. / 浏览器里暂时无法转换这些文件。", true);
+}
+
+async function installParser(name) {
+  if (installed.has(name)) return;
+  for (const dep of PYODIDE_PACKAGE_DEPS[name] || []) {
+    await pyodide.loadPackage(dep);
+  }
+  await micropip.install(name);
+  installed.add(name);
+}
+
+function parserLoadError(name) {
+  return (
+    `This format needs the ${name} parser, which could not load in the browser. ` +
+    `It works from the command line — see the GitHub repo. / ` +
+    `此格式需要 ${name} 解析器，但浏览器里加载失败；CLI 版本可以处理。`
+  );
 }
 
 function showResult(name, ext, html) {
   currentHtml = html;
+  currentName = name;
   window.__e2h.lastHtml = html;
+  window.__e2h.error = null;
   els.vName.textContent = name;
   els.vExt.textContent = ext;
   els.preview.srcdoc = html;
@@ -180,19 +287,22 @@ function showPreview(preview) {
   els.btnSource.setAttribute("aria-pressed", String(!preview));
 }
 
-async function handleFile(file) {
-  const buf = new Uint8Array(await file.arrayBuffer());
-  await convertBytes(file.name, buf);
+async function handleFiles(files) {
+  await convertFiles(files, currentMode);
 }
 
-// -- wiring ---------------------------------------------------------------
+function setMode(mode) {
+  currentMode = mode;
+  els.modeAuto.setAttribute("aria-pressed", String(mode === "auto"));
+  els.modeDiff.setAttribute("aria-pressed", String(mode === "diff"));
+}
 
 els.dropzone.addEventListener("click", () => els.fileInput.click());
 els.dropzone.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.key === " ") els.fileInput.click();
 });
 els.fileInput.addEventListener("change", () => {
-  if (els.fileInput.files[0]) handleFile(els.fileInput.files[0]);
+  if (els.fileInput.files.length) handleFiles(els.fileInput.files);
 });
 
 ["dragenter", "dragover"].forEach((ev) =>
@@ -208,8 +318,7 @@ els.fileInput.addEventListener("change", () => {
   }),
 );
 els.dropzone.addEventListener("drop", (e) => {
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
+  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
 });
 
 document.querySelectorAll(".samples button").forEach((btn) =>
@@ -219,6 +328,8 @@ document.querySelectorAll(".samples button").forEach((btn) =>
   }),
 );
 
+els.modeAuto.addEventListener("click", () => setMode("auto"));
+els.modeDiff.addEventListener("click", () => setMode("diff"));
 els.btnPreview.addEventListener("click", () => showPreview(true));
 els.btnSource.addEventListener("click", () => showPreview(false));
 els.btnDownload.addEventListener("click", () => {
@@ -230,10 +341,11 @@ els.btnDownload.addEventListener("click", () => {
   URL.revokeObjectURL(a.href);
 });
 
-// Expose for automated testing.
 window.__e2h.convertSample = (key) => {
-  const s = SAMPLES[key];
-  return convertBytes(s.name, new TextEncoder().encode(s.body));
+  const sample = SAMPLES[key];
+  return convertBytes(sample.name, new TextEncoder().encode(sample.body));
 };
+window.__e2h.convertFiles = convertFiles;
+window.__e2h.setMode = setMode;
 
 boot();
