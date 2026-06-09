@@ -7,7 +7,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/everythingtohtml.svg)](https://pypi.org/project/everythingtohtml/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-English | [中文发布文案](docs/LAUNCH.zh-CN.md) | **[▶ Live demo — drag a file, read it as HTML](https://he-wei-gui.github.io/everythingtohtml/)**
+English | [中文](README.zh-CN.md) | **[▶ Live demo — drag a file, read it as HTML](https://he-wei-gui.github.io/everythingtohtml/)**
 
 <p align="center">
   <a href="https://he-wei-gui.github.io/everythingtohtml/">
