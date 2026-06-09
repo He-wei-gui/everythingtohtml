@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/He-wei-gui/everythingtohtml/actions/workflows/ci.yml/badge.svg)](https://github.com/He-wei-gui/everythingtohtml/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/everythingtohtml?color=brightgreen)](https://pypi.org/project/everythingtohtml/)
-[![Python versions](https://img.shields.io/pypi/pyversions/everythingtohtml.svg)](https://pypi.org/project/everythingtohtml/)
+[![Python versions](https://img.shields.io/pypi/pyversions/everythingtohtml?color=blue)](https://pypi.org/project/everythingtohtml/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 [English](README.md) | 中文 | **[▶ 在线 Demo —— 拖个文件，秒变 HTML](https://he-wei-gui.github.io/everythingtohtml/)**
