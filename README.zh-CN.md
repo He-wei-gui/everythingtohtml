@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://he-wei-gui.github.io/everythingtohtml/">
-    <img src="site/screenshot.png" alt="everythingtohtml 浏览器内万能文件阅读器" width="760">
+    <img src="site/demo.gif" alt="everythingtohtml —— 拖个文件，秒变干净 HTML" width="760">
   </a>
 </p>
 

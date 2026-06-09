@@ -11,7 +11,7 @@ English | [中文](README.zh-CN.md) | **[▶ Live demo — drag a file, read it 
 
 <p align="center">
   <a href="https://he-wei-gui.github.io/everythingtohtml/">
-    <img src="site/screenshot.png" alt="everythingtohtml in-browser universal file reader" width="760">
+    <img src="site/demo.gif" alt="everythingtohtml — drag a file, read it as clean HTML" width="760">
   </a>
 </p>
 
