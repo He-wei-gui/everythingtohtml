@@ -5,8 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>everythingtohtml — the universal file reader, in your browser</title>
 <meta name="description" content="Drag in a PDF, Word, Excel, EPUB, Markdown, CSV, JSON or email file and read it instantly as clean HTML — entirely in your browser, nothing uploaded. 把常见文件拖进浏览器，直接转成干净自包含的 HTML。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://he-wei-gui.github.io/everythingtohtml/">
 <meta property="og:title" content="everythingtohtml — universal file reader">
 <meta property="og:description" content="Drop any file, read it as clean HTML. Runs 100% in your browser, nothing is uploaded.">
+<meta property="og:image" content="https://he-wei-gui.github.io/everythingtohtml/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="everythingtohtml — universal file reader">
+<meta name="twitter:description" content="Drop any file, read it as clean HTML. Runs 100% in your browser, nothing uploaded.">
+<meta name="twitter:image" content="https://he-wei-gui.github.io/everythingtohtml/og-image.png">
 <style>
   :root { color-scheme: light dark; --accent: #0b5cff; --accent2:#7c3aed; --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --card:#f7f7f9; --border:#e3e3e8; }
   @media (prefers-color-scheme: dark){ :root{ --accent:#6ea8fe; --accent2:#b794f6; --bg:#0e0f12; --fg:#e8e8ea; --muted:#9aa0a6; --card:#17181c; --border:#2a2b31; } }
@@ -35,6 +43,9 @@
   .modehint{margin:.35rem 0 0;color:var(--muted);font-size:.82rem;}
   #status{min-height:1.4rem;margin:.9rem 0 0;font-size:.9rem;color:var(--muted);}
   #status.err{color:#d33;}
+  .progress{height:4px;background:var(--border);border-radius:999px;overflow:hidden;margin:.5rem 0 0;opacity:1;transition:opacity .4s;}
+  .progress.done{opacity:0;}
+  #progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease;}
   .privacy{font-size:.82rem;color:var(--muted);margin-top:.4rem;}
 
   .viewer{display:none;margin-top:1.25rem;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card);}
@@ -81,6 +92,9 @@
         <input type="file" id="file-input" multiple hidden>
         <div class="samples">
           Try a sample / 试试样例：
+          <button data-file="samples/report.docx">📊 Word table</button>
+          <button data-file="samples/scan.pdf">🖼️ Scanned PDF</button>
+          <button data-file="samples/data.xlsx">📈 Excel</button>
           <button data-sample="md">Markdown</button>
           <button data-sample="csv">CSV</button>
           <button data-sample="json">JSON</button>
@@ -92,6 +106,7 @@
         </div>
         <p class="modehint">Drop multiple files to merge them automatically. Switch to Diff before dropping exactly two files. / 拖入多个文件会自动合并；切到 Diff 后拖入两个文件即可对比。</p>
         <div id="status" aria-live="polite">Booting the in-browser Python runtime…</div>
+        <div id="progress" class="progress"><div id="progress-bar"></div></div>
         <div class="privacy">🔒 Conversion runs entirely on your device via WebAssembly. Files are never sent anywhere. / 转换全程在你的设备上运行，文件不会上传。</div>
 
         <div class="viewer" id="viewer">

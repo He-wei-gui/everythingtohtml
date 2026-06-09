@@ -63,6 +63,8 @@ const els = {
   btnDownload: document.getElementById("btn-download"),
   modeAuto: document.getElementById("mode-auto"),
   modeDiff: document.getElementById("mode-diff"),
+  progress: document.getElementById("progress"),
+  progressBar: document.getElementById("progress-bar"),
 };
 
 let pyodide = null;
@@ -79,18 +81,27 @@ function setStatus(text, isError = false) {
   els.status.classList.toggle("err", isError);
 }
 
+function setProgress(pct) {
+  if (els.progressBar) els.progressBar.style.width = `${pct}%`;
+}
+
 async function boot() {
   try {
+    setProgress(8);
     setStatus("Loading the in-browser Python runtime… / 正在加载浏览器内 Python 运行时…");
     const mod = await import(PYODIDE_URL + "pyodide.mjs");
+    setProgress(25);
     pyodide = await mod.loadPyodide({ indexURL: PYODIDE_URL });
+    setProgress(60);
 
     setStatus("Installing the converters… / 正在安装转换器…");
     await pyodide.loadPackage("micropip");
     micropip = pyodide.pyimport("micropip");
+    setProgress(75);
 
     const wheelURL = new URL("wheels/everythingtohtml-0.1.2-py3-none-any.whl", location.href).href;
     await micropip.install(wheelURL);
+    setProgress(92);
 
     await pyodide.runPythonAsync(`
 from everythingtohtml import EverythingToHtml
@@ -131,12 +142,30 @@ def _convert_paths(paths, mode, labels):
         return ['error', f'{type(exc).__name__}: {exc}']
 `);
 
+    setProgress(100);
+    if (els.progress) els.progress.classList.add("done");
     setStatus("Ready — drop one or more files to read them. / 已就绪，拖入一个或多个文件即可阅读。");
     window.__e2h.ready = true;
   } catch (err) {
     setStatus("Failed to start the in-browser runtime: " + err.message, true);
     window.__e2h.error = String(err);
     throw err;
+  }
+}
+
+async function loadSampleFile(url) {
+  const name = url.split("/").pop() || "sample";
+  if (!pyodide) {
+    setStatus("Still starting up — one moment… / 还在启动，请稍等…");
+    return;
+  }
+  setStatus(`Loading sample ${name}… / 正在加载示例 ${name}…`);
+  try {
+    const resp = await fetch(url);
+    const bytes = new Uint8Array(await resp.arrayBuffer());
+    await convertBytes(name, bytes);
+  } catch (err) {
+    setStatus("Could not load the sample file. / 无法加载示例文件。", true);
   }
 }
 
@@ -329,6 +358,10 @@ els.dropzone.addEventListener("drop", (e) => {
 
 document.querySelectorAll(".samples button").forEach((btn) =>
   btn.addEventListener("click", () => {
+    if (btn.dataset.file) {
+      loadSampleFile(btn.dataset.file);
+      return;
+    }
     const sample = SAMPLES[btn.dataset.sample];
     if (sample) convertBytes(sample.name, new TextEncoder().encode(sample.body));
   }),
