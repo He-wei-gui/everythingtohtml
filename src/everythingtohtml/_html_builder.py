@@ -30,13 +30,31 @@ body {
   a { color: #6ea8fe; }
   table th { background: #1e1e1e; }
   table td, table th { border-color: #333; }
+  table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
   pre, code { background: #1e1e1e; }
 }
 h1, h2, h3 { line-height: 1.25; }
 a { color: #0b5cff; }
-table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-table td, table th { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
-table th { background: #f5f5f5; }
+/* Tables: scroll horizontally when wider than the page instead of overflowing. */
+table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  font-size: 0.95em;
+}
+table td, table th {
+  border: 1px solid #d4d4dc;
+  padding: 0.4rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+table th { background: #f5f5f5; font-weight: 600; }
+table tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
+/* Office converters wrap cell content in <p>; keep cells compact. */
+table td > p, table th > p { margin: 0.1rem 0; }
+table td > p:only-child, table th > p:only-child { margin: 0; }
 pre {
   background: #f5f5f5; padding: 1rem; overflow-x: auto; border-radius: 6px;
 }

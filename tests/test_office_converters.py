@@ -36,6 +36,27 @@ def test_docx(eth: EverythingToHtml) -> None:
     assert result.title == "Report Title"
 
 
+def test_docx_table_gets_header(eth: EverythingToHtml) -> None:
+    pytest.importorskip("mammoth")
+    docx = pytest.importorskip("docx")
+
+    document = docx.Document()
+    table = document.add_table(rows=2, cols=2)
+    table.cell(0, 0).text = "Name"
+    table.cell(0, 1).text = "Score"
+    table.cell(1, 0).text = "Alice"
+    table.cell(1, 1).text = "95"
+    buffer = io.BytesIO()
+    document.save(buffer)
+    buffer.seek(0)
+
+    result = eth.convert(buffer, stream_info=StreamInfo(extension=".docx"))
+    # First row is promoted to a real header; cell <p> wrappers are unwrapped.
+    assert "<thead>" in result.html
+    assert "<th>Name</th>" in result.html
+    assert "<td>Alice</td>" in result.html
+
+
 def test_xlsx(eth: EverythingToHtml) -> None:
     openpyxl = pytest.importorskip("openpyxl")
 

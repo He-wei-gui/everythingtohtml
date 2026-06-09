@@ -6,6 +6,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-09
+
+### Changed
+
+- **Tables render much better.** The default stylesheet now gives every table a
+  shaded header row, zebra striping, compact cells, and horizontal scrolling for
+  wide tables (so they no longer overflow the page). This applies to DOCX, XLSX,
+  legacy DOC (via LibreOffice), CSV, and Markdown output alike.
+- **DOCX tables**: mammoth's bare tables are post-processed to promote the first
+  row to a real `<thead>`/`<th>` header and to unwrap single-paragraph cells, so
+  they read as proper tables instead of an unstyled grid.
+- Version bump also refreshes the in-browser demo wheel (cache-bust).
+
 ## [0.1.1] - 2026-06-09
 
 ### Added

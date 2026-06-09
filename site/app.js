@@ -89,7 +89,7 @@ async function boot() {
     await pyodide.loadPackage("micropip");
     micropip = pyodide.pyimport("micropip");
 
-    const wheelURL = new URL("wheels/everythingtohtml-0.1.1-py3-none-any.whl", location.href).href;
+    const wheelURL = new URL("wheels/everythingtohtml-0.1.2-py3-none-any.whl", location.href).href;
     await micropip.install(wheelURL);
 
     await pyodide.runPythonAsync(`

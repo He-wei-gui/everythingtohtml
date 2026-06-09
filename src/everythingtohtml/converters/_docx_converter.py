@@ -49,7 +49,7 @@ class DocxConverter(DocumentConverter):
             ) from exc
 
         result = mammoth.convert_to_html(file_stream)
-        body = result.value or "<p><em>(empty document)</em></p>"
+        body = _improve_tables(result.value) if result.value else "<p><em>(empty document)</em></p>"
 
         title = _first_heading_text(body) or stream_info.filename
         html = wrap_document(body, title=title)
@@ -58,6 +58,40 @@ class DocxConverter(DocumentConverter):
             title=title,
             metadata={"mammoth_messages": [str(m) for m in result.messages]},
         )
+
+
+def _improve_tables(body: str) -> str:
+    """Make mammoth's bare tables render well.
+
+    Mammoth emits ``<table><tr><td>…`` with no header row and wraps each cell's
+    content in a ``<p>``. We promote the first row to a ``<thead>`` of ``<th>``
+    cells and unwrap lone cell paragraphs so the default stylesheet can render a
+    clean, readable table.
+    """
+    if "<table" not in body:
+        return body
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:  # pragma: no cover - bs4 is a core dependency
+        return body
+
+    soup = BeautifulSoup(body, "html.parser")
+    for table in soup.find_all("table"):
+        rows = table.find_all("tr")
+        if rows and not table.find("th") and not table.find("thead"):
+            header = rows[0]
+            for cell in header.find_all("td"):
+                cell.name = "th"
+            header.extract()
+            thead = soup.new_tag("thead")
+            thead.append(header)
+            table.insert(0, thead)
+        # Unwrap a cell's single <p> so cells aren't artificially tall.
+        for cell in table.find_all(["td", "th"]):
+            paragraphs = cell.find_all("p", recursive=False)
+            if len(paragraphs) == 1 and not paragraphs[0].find(["p", "ul", "ol", "table"]):
+                paragraphs[0].unwrap()
+    return str(soup)
 
 
 def _first_heading_text(html_body: str) -> str | None:
