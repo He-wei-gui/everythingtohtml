@@ -17,6 +17,7 @@ from everythingtohtml.converters import DocConverter
 from everythingtohtml.converters._doc_converter import (
     _clean_word_text,
     _extract_text_from_worddocument,
+    _extract_text_via_piece_table,
     _printable_ratio,
 )
 
@@ -76,3 +77,39 @@ def test_doc_text_extraction_stops_at_fc_mac() -> None:
 
     assert text in extracted
     assert "꿺" not in extracted
+
+
+def test_doc_piece_table_mixed_encoding() -> None:
+    """The piece-table parser decodes each piece with its own encoding (16-bit
+    UTF-16 for the Chinese run, 8-bit for the ASCII run) and produces no mojibake."""
+    unicode_text = "题目：《现代医养信息系统》课程论文"
+    ascii_text = "Summary ABC"
+    u16 = unicode_text.encode("utf-16-le")
+    a8 = ascii_text.encode("cp1252")
+
+    offset_u = 0x500
+    offset_c = 0x700
+    word_doc = bytearray(0x900)
+    word_doc[0x06:0x08] = (0x0409).to_bytes(2, "little")  # English lid -> cp1252
+    word_doc[offset_u : offset_u + len(u16)] = u16
+    word_doc[offset_c : offset_c + len(a8)] = a8
+
+    n, m = len(unicode_text), len(ascii_text)
+    cps = [0, n, n + m]
+    plc = b"".join(cp.to_bytes(4, "little") for cp in cps)
+    # PCD0: 16-bit Unicode piece (fCompressed=0), fc = offset.
+    plc += (0).to_bytes(2, "little") + offset_u.to_bytes(4, "little") + (0).to_bytes(2, "little")
+    # PCD1: 8-bit compressed piece (fCompressed bit 30 set), stored fc = offset*2.
+    fc1 = (offset_c * 2) | 0x40000000
+    plc += (0).to_bytes(2, "little") + fc1.to_bytes(4, "little") + (0).to_bytes(2, "little")
+
+    clx = b"\x02" + len(plc).to_bytes(4, "little") + plc
+    word_doc[0x1A2:0x1A6] = (0).to_bytes(4, "little")  # fcClx = start of table
+    word_doc[0x1A6:0x1AA] = len(clx).to_bytes(4, "little")
+
+    out = _extract_text_via_piece_table(bytes(word_doc), clx)
+
+    assert out is not None
+    assert "现代医养信息系统" in out
+    assert "ABC" in out
+    assert "�" not in out and "꿺" not in out

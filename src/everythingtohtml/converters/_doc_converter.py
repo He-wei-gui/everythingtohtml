@@ -145,24 +145,134 @@ def _convert_with_libreoffice(soffice: str, data: bytes) -> str | None:
 
 
 def _extract_doc_text(stream: BinaryIO, olefile: Any) -> str:
-    """Best-effort plain-text extraction from a Word ``WordDocument`` stream.
+    """Plain-text extraction from a Word ``.doc``.
 
-    Reads the FIB to locate the main text span, then decodes it as either 8-bit
-    (cp1252) or 16-bit (UTF-16LE) characters — whichever yields more printable
-    content — and maps Word's control characters to whitespace/newlines.
+    The correct, robust path parses the *piece table* (the CLX stored in the
+    document's table stream). Word splits the main text into pieces, each of which
+    is independently either 8-bit (a Windows code page) or 16-bit (UTF-16LE); only
+    by honouring that per-piece encoding does non-Latin text — Chinese especially —
+    come out clean instead of as mojibake. If the piece table cannot be parsed, we
+    fall back to a looser single-span heuristic.
     """
     ole = olefile.OleFileIO(stream)
     try:
         if not ole.exists("WordDocument"):
             return ""
-        raw = ole.openstream("WordDocument").read()
+        word_doc = ole.openstream("WordDocument").read()
+        table = b""
+        if len(word_doc) >= 0x0C:
+            # FibBase flag bit 9 (fWhichTblStm) selects 1Table vs 0Table.
+            flags = int.from_bytes(word_doc[0x0A:0x0C], "little")
+            preferred = "1Table" if (flags >> 9) & 1 else "0Table"
+            for name in (preferred, "1Table", "0Table"):
+                if ole.exists(name):
+                    table = ole.openstream(name).read()
+                    break
     finally:
         ole.close()
 
-    if len(raw) < 0x20:
+    if len(word_doc) < 0x20:
         return ""
 
-    return _extract_text_from_worddocument(raw)
+    if table:
+        via_pieces = _extract_text_via_piece_table(word_doc, table)
+        if via_pieces:
+            return via_pieces
+    return _extract_text_from_worddocument(word_doc)
+
+
+# Word language id (lid) -> ANSI code page used to decode 8-bit "compressed" runs.
+_LID_CODEPAGE = {
+    0x0804: "gbk",
+    0x1004: "gbk",  # Simplified Chinese
+    0x0404: "big5",
+    0x0C04: "big5",
+    0x1404: "big5",  # Traditional Chinese
+    0x0411: "cp932",  # Japanese
+    0x0412: "cp949",  # Korean
+}
+
+
+def _ansi_codepage_for_lid(lid: int) -> str:
+    return _LID_CODEPAGE.get(lid, "cp1252")
+
+
+def _extract_text_via_piece_table(word_doc: bytes, table: bytes) -> str | None:
+    """Extract main-document text by walking the CLX piece table (MS-DOC §2.8.35).
+
+    Returns ``None`` if the structures cannot be parsed, so the caller can fall
+    back to the looser heuristic.
+    """
+    if len(word_doc) < 0x1AA:
+        return None
+    fc_clx = int.from_bytes(word_doc[0x1A2:0x1A6], "little")
+    lcb_clx = int.from_bytes(word_doc[0x1A6:0x1AA], "little")
+    if lcb_clx <= 0 or fc_clx < 0 or fc_clx + lcb_clx > len(table):
+        return None
+    ansi = _ansi_codepage_for_lid(int.from_bytes(word_doc[0x06:0x08], "little"))
+
+    clx = table[fc_clx : fc_clx + lcb_clx]
+    # Skip any leading Prc (formatting) entries to reach the Pcdt (clxt == 0x02).
+    i = 0
+    while i < len(clx) and clx[i] == 0x01:
+        if i + 3 > len(clx):
+            return None
+        cb = int.from_bytes(clx[i + 1 : i + 3], "little")
+        i += 3 + cb
+    if i >= len(clx) or clx[i] != 0x02:
+        return None
+    lcb_pcdt = int.from_bytes(clx[i + 1 : i + 5], "little")
+    plc = clx[i + 5 : i + 5 + lcb_pcdt]
+    if len(plc) < 16:
+        return None
+
+    # PlcPcd = (n+1) CPs (4 bytes each) followed by n PCDs (8 bytes each).
+    n_pieces = (len(plc) - 4) // 12
+    if n_pieces <= 0:
+        return None
+    cps = [int.from_bytes(plc[4 * k : 4 * k + 4], "little") for k in range(n_pieces + 1)]
+    pcd_base = 4 * (n_pieces + 1)
+
+    pieces: list[str] = []
+    for k in range(n_pieces):
+        pcd = plc[pcd_base + 8 * k : pcd_base + 8 * k + 8]
+        if len(pcd) < 6:
+            break
+        fc_struct = int.from_bytes(pcd[2:6], "little")
+        compressed = bool(fc_struct & 0x40000000)  # FcCompressed.fCompressed
+        fc = fc_struct & 0x3FFFFFFF
+        n_chars = cps[k + 1] - cps[k]
+        if n_chars <= 0:
+            continue
+        if compressed:
+            start = fc // 2  # 8-bit run; stored fc is twice the byte offset
+            pieces.append(word_doc[start : start + n_chars].decode(ansi, errors="replace"))
+        else:
+            start = fc  # 16-bit (UTF-16LE) run
+            chunk = word_doc[start : start + n_chars * 2]
+            pieces.append(chunk.decode("utf-16-le", errors="replace"))
+
+    text = _strip_field_codes("".join(pieces))
+    return _clean_word_text(text) or None
+
+
+def _strip_field_codes(text: str) -> str:
+    """Drop Word field instructions (0x13..0x14) and field marks (0x13/0x14/0x15)."""
+    out: list[str] = []
+    in_instruction = False
+    for ch in text:
+        code = ord(ch)
+        if code == 0x13:  # field begin
+            in_instruction = True
+            continue
+        if code == 0x14:  # field separator (instruction ends, result begins)
+            in_instruction = False
+            continue
+        if code == 0x15:  # field end
+            continue
+        if not in_instruction:
+            out.append(ch)
+    return "".join(out)
 
 
 def _extract_text_from_worddocument(raw: bytes) -> str:

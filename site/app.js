@@ -89,7 +89,7 @@ async function boot() {
     await pyodide.loadPackage("micropip");
     micropip = pyodide.pyimport("micropip");
 
-    const wheelURL = new URL("wheels/everythingtohtml-0.1.0-py3-none-any.whl", location.href).href;
+    const wheelURL = new URL("wheels/everythingtohtml-0.1.1-py3-none-any.whl", location.href).href;
     await micropip.install(wheelURL);
 
     await pyodide.runPythonAsync(`
@@ -274,7 +274,13 @@ function showResult(name, ext, html) {
   window.__e2h.error = null;
   els.vName.textContent = name;
   els.vExt.textContent = ext;
-  els.preview.srcdoc = html;
+  // Render defensively: a pathological document must never break the viewer.
+  try {
+    els.preview.removeAttribute("srcdoc");
+    els.preview.srcdoc = html;
+  } catch (err) {
+    setStatus("Rendered as source (preview unavailable for this file).", true);
+  }
   els.source.textContent = html;
   els.viewer.classList.add("show");
   showPreview(true);

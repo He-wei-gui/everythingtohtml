@@ -6,6 +6,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-09
+
 ### Added
 
 - **EPUB** converter (built in, no extra): follows the spine reading order and
@@ -18,12 +20,26 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   paragraphs, one section per page.
 - **Legacy `.doc`** converter behind the new `doc` extra: uses headless
   LibreOffice when available for high-fidelity output, with a pure-Python
-  `olefile` text-extraction fallback otherwise.
+  fallback otherwise.
 - **`EverythingToHtml.merge()`**: combine several sources into one HTML document,
   with `layout="stacked"` (table of contents) or `layout="columns"` (side by
   side). Exposed on the CLI by passing two or more sources, plus `--columns`.
 - **`EverythingToHtml.diff()`**: render a highlighted, line-by-line comparison of
   two documents. Exposed on the CLI via `--diff`.
+- **In-browser "universal reader" demo** (GitHub Pages + Pyodide): drag in a file
+  and read it as HTML entirely client-side, with multi-file merge and two-file
+  diff. PPTX shapes are positioned by their slide coordinates.
+
+### Fixed
+
+- **Legacy `.doc` mojibake**: the pure-Python fallback now parses the Word piece
+  table (CLX) from the table stream and decodes each text piece with its own
+  8-bit/16-bit encoding (UTF-16LE or the language-appropriate code page). This
+  fixes garbled output — Chinese especially — that the earlier single-span
+  heuristic produced. The heuristic remains as a last-resort fallback.
+- Optional-dependency errors now surface as `MissingDependencyException` with the
+  exact install hint, instead of being hidden inside a generic
+  `FileConversionException`.
 
 ## [0.1.0] - 2026-06-08
 

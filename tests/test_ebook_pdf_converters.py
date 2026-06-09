@@ -116,3 +116,25 @@ def test_pdf_detected_by_magic_bytes(eth: EverythingToHtml) -> None:
     # No extension hint -> must be recognised by the %PDF- header.
     result = eth.convert(data)
     assert "Magic Sniff" in result.html
+
+
+def test_pdf_scanned_image_fallback(eth: EverythingToHtml, tmp_path) -> None:
+    """An image-only PDF (no extractable text) should embed its page image rather
+    than just reporting '(no extractable text)'."""
+    pytest.importorskip("pdfminer")
+    pytest.importorskip("PIL")
+    fpdf = pytest.importorskip("fpdf")  # fpdf2
+    from PIL import Image
+
+    jpeg_path = tmp_path / "scan.jpg"
+    Image.new("RGB", (48, 32), (200, 90, 90)).save(jpeg_path, "JPEG")
+
+    pdf = fpdf.FPDF()
+    pdf.add_page()
+    pdf.image(str(jpeg_path), x=10, y=10, w=60)  # image only, no text
+    data = bytes(pdf.output())
+
+    result = eth.convert(data, stream_info=StreamInfo(extension=".pdf"))
+    assert "data:image/jpeg;base64," in result.html
+    assert "(no extractable text)" not in result.html
+    assert 'class="pdf-image"' in result.html
