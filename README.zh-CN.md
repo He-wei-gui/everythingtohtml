@@ -3,7 +3,7 @@
 > 把（几乎）任何文件转成干净、自包含的 HTML —— 一个浏览器里的「万能文件阅读器」，也是 Python 包和 CLI。
 
 [![CI](https://github.com/He-wei-gui/everythingtohtml/actions/workflows/ci.yml/badge.svg)](https://github.com/He-wei-gui/everythingtohtml/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/everythingtohtml.svg)](https://pypi.org/project/everythingtohtml/)
+[![PyPI](https://img.shields.io/pypi/v/everythingtohtml?color=brightgreen)](https://pypi.org/project/everythingtohtml/)
 [![Python versions](https://img.shields.io/pypi/pyversions/everythingtohtml.svg)](https://pypi.org/project/everythingtohtml/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
