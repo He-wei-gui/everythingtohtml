@@ -59,6 +59,10 @@
   .vbar button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;}
   #preview{width:100%;height:60vh;border:0;background:#fff;}
   #source{display:none;margin:0;max-height:60vh;overflow:auto;padding:1rem;font-size:.8rem;font-family:ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;}
+  /* Fullscreen preview: keep the toolbar, let the content fill the screen. */
+  #viewer:fullscreen{display:flex;flex-direction:column;border:0;border-radius:0;background:var(--bg);}
+  #viewer:fullscreen #preview{flex:1 1 auto;height:auto;}
+  #viewer:fullscreen #source{flex:1 1 auto;height:auto;max-height:none;}
 
   section{padding:2.5rem 0;border-top:1px solid var(--border);}
   h2{font-size:1.5rem;letter-spacing:-.01em;}
@@ -116,9 +120,10 @@
             <span class="spacer"></span>
             <button id="btn-preview" type="button" aria-pressed="true">Preview / 预览</button>
             <button id="btn-source" type="button" aria-pressed="false">HTML source / 源码</button>
+            <button id="btn-fullscreen" type="button">⛶ Fullscreen / 全屏</button>
             <button id="btn-download" type="button">Download .html / 下载</button>
           </div>
-          <iframe id="preview" sandbox="allow-same-origin" title="Rendered preview"></iframe>
+          <iframe id="preview" sandbox="allow-same-origin" title="Rendered preview" allowfullscreen></iframe>
           <pre id="source"></pre>
         </div>
       </div>

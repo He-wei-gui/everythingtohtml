@@ -60,6 +60,7 @@ const els = {
   vExt: document.getElementById("v-ext"),
   btnPreview: document.getElementById("btn-preview"),
   btnSource: document.getElementById("btn-source"),
+  btnFullscreen: document.getElementById("btn-fullscreen"),
   btnDownload: document.getElementById("btn-download"),
   modeAuto: document.getElementById("mode-auto"),
   modeDiff: document.getElementById("mode-diff"),
@@ -371,6 +372,28 @@ els.modeAuto.addEventListener("click", () => setMode("auto"));
 els.modeDiff.addEventListener("click", () => setMode("diff"));
 els.btnPreview.addEventListener("click", () => showPreview(true));
 els.btnSource.addEventListener("click", () => showPreview(false));
+
+// Fullscreen the whole viewer (toolbar stays, so Esc/Exit/Preview all work).
+els.btnFullscreen.addEventListener("click", () => {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (els.viewer.requestFullscreen) {
+    showPreview(true);
+    els.viewer.requestFullscreen().catch(() => {
+      // Fallback: open the rendered HTML in a new tab.
+      const blob = new Blob([currentHtml], { type: "text/html" });
+      window.open(URL.createObjectURL(blob), "_blank");
+    });
+  } else {
+    const blob = new Blob([currentHtml], { type: "text/html" });
+    window.open(URL.createObjectURL(blob), "_blank");
+  }
+});
+document.addEventListener("fullscreenchange", () => {
+  const on = document.fullscreenElement === els.viewer;
+  els.btnFullscreen.textContent = on ? "✕ Exit / 退出全屏" : "⛶ Fullscreen / 全屏";
+});
+
 els.btnDownload.addEventListener("click", () => {
   const blob = new Blob([currentHtml], { type: "text/html" });
   const a = document.createElement("a");
