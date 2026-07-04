@@ -79,6 +79,9 @@ matters — headings, tables, lists, sections, links, images — while staying:
 > installed (used headlessly for high-fidelity conversion). Without it, a
 > pure-Python `olefile` fallback recovers the text content.
 
+> **Markdown math**: LaTeX written as `$…$` (inline) or `$$…$$` (display) renders
+> via MathJax — matrices, `\underbrace`, `\text{…}` (including CJK), and more.
+
 > Want everything? `pip install everythingtohtml[all]`
 
 New formats are just a small class away — see [Writing a converter](#writing-a-converter).

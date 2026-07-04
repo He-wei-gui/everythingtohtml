@@ -67,6 +67,8 @@ Markdown 是有损的：表格被压平、样式消失、幻灯片版式不见�
 
 > **老版 `.doc`**：装了 [LibreOffice](https://www.libreoffice.org/) 效果最好（无头模式高保真转换）。没装时会用纯 Python 的 `olefile` 兜底提取正文（已正确处理中文，不再乱码）。扫描版 / 纯图片 PDF 会直接显示页面图片。
 
+> **Markdown 数学公式**：写成 `$…$`（行内）或 `$$…$$`（独立）的 LaTeX 会通过 MathJax 渲染——矩阵、`\underbrace`、`\text{…}`（含中文）等都支持。
+
 > 想要全部格式？ `pip install everythingtohtml[all]`
 
 加新格式只需要写一个小类 —— 见 [编写转换器](#编写一个转换器)。

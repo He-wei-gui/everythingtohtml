@@ -104,7 +104,7 @@ async function boot() {
     micropip = pyodide.pyimport("micropip");
     setProgress(75);
 
-    const wheelURL = new URL("wheels/everythingtohtml-0.1.2-py3-none-any.whl", location.href).href;
+    const wheelURL = new URL("wheels/everythingtohtml-0.1.3-py3-none-any.whl", location.href).href;
     await micropip.install(wheelURL);
     setProgress(92);
 

@@ -39,6 +39,7 @@ classifiers = [
 dependencies = [
     "charset-normalizer>=3.0",
     "markdown-it-py>=3.0",
+    "mdit-py-plugins>=0.4",
     "mdurl>=0.1",
     "beautifulsoup4>=4.12",
     "defusedxml>=0.7",

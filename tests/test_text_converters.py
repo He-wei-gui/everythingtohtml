@@ -34,6 +34,28 @@ def test_markdown_table(eth: EverythingToHtml) -> None:
     assert "<td>1</td>" in result.html
 
 
+def test_markdown_math(eth: EverythingToHtml) -> None:
+    # Raw string keeps LaTeX backslashes exactly as written.
+    md = (
+        "# M\n\nInline $x^2 + y_i$ and a matrix:\n\n"
+        "$$\n"
+        r"A = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}"
+        "\n$$\n"
+    )
+    result = _convert(eth, md, ".md")
+    # MathJax is injected only when math is present, and renders our delimiters.
+    assert "mathjax@3" in result.html
+    assert '<div class="math-block">' in result.html
+    assert r"\begin{bmatrix}" in result.html  # LaTeX (and its `\`) survive Markdown
+    assert "1 &amp; 2" in result.html  # `&` column separators preserved, escaped
+    assert r"\(x^2 + y_i\)" in result.html  # inline math; `_` not treated as emphasis
+
+
+def test_markdown_without_math_stays_lightweight(eth: EverythingToHtml) -> None:
+    result = _convert(eth, "# Plain\n\nJust prose, no formulas.", ".md")
+    assert "mathjax" not in result.html.lower()  # no CDN dependency for plain docs
+
+
 def test_csv_to_table(eth: EverythingToHtml) -> None:
     result = _convert(eth, "name,age\nAlice,30\nBob,25\n", ".csv")
     assert "<thead>" in result.html

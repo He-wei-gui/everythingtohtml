@@ -6,6 +6,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-07-04
+
+### Added
+
+- **LaTeX math in Markdown.** `$…$` and `$$…$$` are parsed with the `dollarmath`
+  plugin (so `_`, `\`, and `&` survive Markdown) and rendered with MathJax, which
+  is injected into the document `<head>` only when a document actually contains
+  math. Matrices, `\underbrace`, `\text{…}` (incl. CJK), etc. all render.
+- The in-browser demo preview now allows scripts, so MathJax renders live there
+  too (and the "Edit text" preview mode keeps working).
+
 ## [0.1.2] - 2026-06-09
 
 ### Changed
