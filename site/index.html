@@ -16,67 +16,96 @@
 <meta name="twitter:description" content="Drop any file, read it as clean HTML. Runs 100% in your browser, nothing uploaded.">
 <meta name="twitter:image" content="https://he-wei-gui.github.io/everythingtohtml/og-image.png">
 <style>
-  :root { color-scheme: light dark; --accent: #0b5cff; --accent2:#7c3aed; --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --card:#f7f7f9; --border:#e3e3e8; }
-  @media (prefers-color-scheme: dark){ :root{ --accent:#6ea8fe; --accent2:#b794f6; --bg:#0e0f12; --fg:#e8e8ea; --muted:#9aa0a6; --card:#17181c; --border:#2a2b31; } }
-  *{box-sizing:border-box;} html,body{margin:0;}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:var(--fg);background:var(--bg);}
+  :root{
+    color-scheme: light dark;
+    --accent:#2563eb; --accent2:#7c3aed;
+    --bg:#fbfcfe; --fg:#0f172a; --muted:#5c677d;
+    --card:#ffffff; --card-2:#f5f7fb; --border:#e6e8ef;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 14px 34px -10px rgba(16,24,40,.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --accent:#7aa2ff; --accent2:#b794f6;
+      --bg:#0b0d12; --fg:#e7e9ee; --muted:#98a2b3;
+      --card:#14161c; --card-2:#171a21; --border:#262a33;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 20px 44px -14px rgba(0,0,0,.65);
+    }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.65;color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased;}
   a{color:var(--accent);text-decoration:none;} a:hover{text-decoration:underline;}
-  .wrap{max-width:62rem;margin:0 auto;padding:0 1.25rem;}
-  header.hero{text-align:center;padding:3.5rem 1.25rem 1rem;}
-  .badge{display:inline-block;font-size:.8rem;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.25rem .8rem;margin-bottom:1.2rem;}
-  h1{font-size:clamp(2.1rem,5.5vw,3.2rem);margin:.2rem 0;letter-spacing:-.02em;}
-  .tagline{font-size:clamp(1rem,2.4vw,1.25rem);color:var(--muted);max-width:40rem;margin:1rem auto 1.5rem;}
-  .tagline.zh{font-size:1rem;margin-top:-.75rem;}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px;}
+  .wrap{max-width:64rem;margin:0 auto;padding:0 1.25rem;}
 
-  /* Demo */
-  .demo{margin:1.5rem auto 0;}
-  #dropzone{border:2px dashed var(--border);border-radius:16px;padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:.15s;background:var(--card);}
-  #dropzone:hover,#dropzone.drag{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--card));}
-  #dropzone .big{font-size:1.25rem;font-weight:600;margin-bottom:.3rem;}
-  #dropzone .sub{color:var(--muted);font-size:.92rem;}
-  .samples{margin:.9rem 0 0;font-size:.88rem;color:var(--muted);}
-  .samples button{font:inherit;color:var(--accent);background:none;border:1px solid var(--border);border-radius:999px;padding:.15rem .7rem;margin:.15rem;cursor:pointer;}
-  .samples button:hover{border-color:var(--accent);}
-  .modebar{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:.8rem 0 0;font-size:.86rem;}
-  .modebar button{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:.25rem .8rem;cursor:pointer;}
-  .modebar button[aria-pressed="true"]{color:#fff;background:var(--accent);border-color:var(--accent);}
-  .modehint{margin:.35rem 0 0;color:var(--muted);font-size:.82rem;}
-  #status{min-height:1.4rem;margin:.9rem 0 0;font-size:.9rem;color:var(--muted);}
-  #status.err{color:#d33;}
-  .progress{height:4px;background:var(--border);border-radius:999px;overflow:hidden;margin:.5rem 0 0;opacity:1;transition:opacity .4s;}
+  /* Hero */
+  header.hero{position:relative;text-align:center;padding:4rem 1.25rem 1rem;overflow:hidden;}
+  header.hero::before{content:"";position:absolute;left:50%;top:-32%;translate:-50% 0;width:min(96rem,150%);height:75%;background:radial-gradient(48% 55% at 50% 42%, color-mix(in srgb,var(--accent) 20%, transparent), transparent 72%);pointer-events:none;z-index:0;}
+  header.hero>.wrap{position:relative;z-index:1;}
+  .badge{display:inline-block;font-size:.78rem;font-weight:500;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.3rem .9rem;margin-bottom:1.25rem;background:color-mix(in srgb,var(--card) 70%, transparent);backdrop-filter:blur(6px);}
+  h1{font-size:clamp(2.3rem,6vw,3.6rem);margin:.2rem 0;letter-spacing:-.03em;line-height:1.05;font-weight:800;background:linear-gradient(120deg,var(--fg) 28%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .tagline{font-size:clamp(1rem,2.4vw,1.2rem);color:var(--muted);max-width:42rem;margin:1rem auto 0;}
+  .tagline.zh{font-size:.98rem;margin-top:.3rem;}
+
+  /* Demo panel */
+  .demo{max-width:50rem;margin:2rem auto 0;text-align:center;background:var(--card);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);padding:1.5rem;}
+  #dropzone{border:2px dashed var(--border);border-radius:16px;padding:2.6rem 1.5rem;cursor:pointer;transition:border-color .18s, background .18s, transform .18s;background:var(--card-2);}
+  #dropzone:hover,#dropzone.drag{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--card-2));}
+  #dropzone.drag{transform:scale(1.01);}
+  #dropzone .big{font-size:1.2rem;font-weight:650;margin-bottom:.35rem;}
+  #dropzone .sub{color:var(--muted);font-size:.9rem;}
+
+  .samples{margin:1rem 0 0;font-size:.86rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;justify-content:center;}
+  .samples button{font:inherit;color:var(--fg);background:var(--card-2);border:1px solid var(--border);border-radius:999px;padding:.3rem .8rem;cursor:pointer;transition:.15s;}
+  .samples button:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);}
+  .modebar{display:inline-flex;gap:.2rem;margin:1rem auto 0;padding:.25rem;background:var(--card-2);border:1px solid var(--border);border-radius:999px;}
+  .modebar button{font:inherit;font-size:.84rem;color:var(--muted);background:transparent;border:0;border-radius:999px;padding:.36rem .9rem;cursor:pointer;transition:.15s;white-space:nowrap;}
+  .modebar button[aria-pressed="true"]{color:#fff;background:linear-gradient(120deg,var(--accent),var(--accent2));box-shadow:0 2px 10px -3px color-mix(in srgb,var(--accent) 65%, transparent);}
+  .modehint{margin:.55rem 0 0;color:var(--muted);font-size:.8rem;}
+  body:not(.extensions-on) .extension-only{display:none;}
+  #status{min-height:1.4rem;margin:1rem 0 0;font-size:.9rem;color:var(--muted);}
+  #status.err{color:#e5484d;}
+  .progress{height:5px;background:var(--border);border-radius:999px;overflow:hidden;margin:.6rem auto 0;max-width:22rem;opacity:1;transition:opacity .4s;}
   .progress.done{opacity:0;}
   #progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s ease;}
-  .privacy{font-size:.82rem;color:var(--muted);margin-top:.4rem;}
+  .privacy{font-size:.8rem;color:var(--muted);margin-top:.5rem;}
 
-  .viewer{display:none;margin-top:1.25rem;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card);}
+  /* Viewer */
+  .viewer{display:none;margin-top:1.25rem;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--card);text-align:left;box-shadow:var(--shadow);}
   .viewer.show{display:block;}
-  .vbar{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-  .vbar .name{font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .vbar .chip{font-family:ui-monospace,monospace;font-size:.78rem;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:.1rem .55rem;}
+  .vbar{display:flex;align-items:center;gap:.5rem;padding:.55rem .7rem;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--card-2);}
+  .vbar .name{font-weight:650;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:15rem;}
+  .vbar .chip{font-family:ui-monospace,monospace;font-size:.75rem;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.1rem .55rem;color:var(--muted);}
   .vbar .spacer{flex:1;}
-  .vbar button{font:inherit;font-size:.82rem;border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:8px;padding:.25rem .7rem;cursor:pointer;}
-  .vbar button:hover{border-color:var(--accent);}
+  .vbar button{font:inherit;font-size:.8rem;border:1px solid var(--border);background:var(--card);color:var(--fg);border-radius:8px;padding:.3rem .7rem;cursor:pointer;transition:.15s;}
+  .vbar button:hover{border-color:var(--accent);color:var(--accent);}
   .vbar button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;}
-  #preview{width:100%;height:60vh;border:0;background:#fff;}
-  #source{display:none;margin:0;max-height:60vh;overflow:auto;padding:1rem;font-size:.8rem;font-family:ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;}
+  #preview{width:100%;height:62vh;border:0;background:#fff;display:block;}
+  #source{display:none;margin:0;max-height:62vh;overflow:auto;padding:1rem;font-size:.8rem;font-family:ui-monospace,monospace;white-space:pre-wrap;word-break:break-word;color:var(--fg);background:var(--card);}
   /* Fullscreen preview: keep the toolbar, let the content fill the screen. */
   #viewer:fullscreen{display:flex;flex-direction:column;border:0;border-radius:0;background:var(--bg);}
   #viewer:fullscreen #preview{flex:1 1 auto;height:auto;}
   #viewer:fullscreen #source{flex:1 1 auto;height:auto;max-height:none;}
 
-  section{padding:2.5rem 0;border-top:1px solid var(--border);}
-  h2{font-size:1.5rem;letter-spacing:-.01em;}
-  .formats{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;}
-  .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.3rem .8rem;font-size:.85rem;font-family:ui-monospace,monospace;}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:1rem;margin-top:1.25rem;}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem;}
-  .card h3{margin:0 0 .4rem;font-size:1.05rem;} .card p{margin:0;color:var(--muted);font-size:.95rem;}
-  .cta{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;}
-  .btn{display:inline-block;padding:.65rem 1.3rem;border-radius:8px;font-weight:600;border:1px solid var(--border);}
-  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-  pre.codeblock{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;overflow-x:auto;font-size:.88rem;}
+  /* Sections */
+  main{position:relative;z-index:1;}
+  section{padding:3rem 0;border-top:1px solid var(--border);}
+  h2{font-size:1.6rem;letter-spacing:-.02em;font-weight:750;}
+  .formats{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;}
+  .chip{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:.32rem .8rem;font-size:.84rem;font-family:ui-monospace,monospace;color:var(--muted);transition:.15s;}
+  .chip:hover{border-color:var(--accent);color:var(--accent);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;margin-top:1.5rem;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.25rem 1.35rem;transition:transform .18s, border-color .18s;box-shadow:var(--shadow);}
+  .card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 40%, var(--border));}
+  .card h3{margin:0 0 .5rem;font-size:1.05rem;} .card p{margin:0;color:var(--muted);font-size:.94rem;}
+  .cta{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;}
+  .btn{display:inline-block;padding:.7rem 1.5rem;border-radius:10px;font-weight:650;border:1px solid var(--border);background:var(--card);transition:transform .15s, border-color .15s;}
+  .btn:hover{text-decoration:none;transform:translateY(-2px);border-color:var(--accent);}
+  .btn.primary{background:linear-gradient(120deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 8px 22px -8px color-mix(in srgb,var(--accent) 70%, transparent);}
+  pre.codeblock{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.15rem 1.35rem;overflow-x:auto;font-size:.88rem;line-height:1.7;box-shadow:var(--shadow);}
   .tok-c{color:var(--muted);}
   footer{text-align:center;color:var(--muted);padding:3rem 1.25rem;font-size:.9rem;border-top:1px solid var(--border);}
+  @media (max-width:36rem){ .demo{padding:1rem;border-radius:16px;} #preview,#source{height:54vh;max-height:54vh;} }
 </style>
 </head>
 <body>
@@ -88,7 +117,7 @@
       <p class="tagline">Drop in a PDF, Word, Excel, EPUB, Markdown, CSV, JSON or email file — and read it instantly as clean HTML. No installs, no upload, no server.</p>
       <p class="tagline zh">拖入 PDF、Word、Excel、EPUB、Markdown、CSV、JSON 或邮件文件，立即读到干净、自包含的 HTML。</p>
 
-      <div class="demo wrap" style="padding:0;max-width:48rem;">
+      <div class="demo">
         <div id="dropzone" tabindex="0" role="button" aria-label="Drop a file or click to browse">
           <div class="big">📄 Drop a file here / 拖文件到这里</div>
           <div class="sub">or click to browse · your file never leaves this page / 也可以点击选择文件，文件不会离开本页</div>
@@ -107,6 +136,7 @@
         <div class="modebar" aria-label="Conversion mode">
           <button id="mode-auto" aria-pressed="true">Auto / 自动</button>
           <button id="mode-diff" aria-pressed="false">Diff two files / 对比两个文件</button>
+          <button id="mode-extensions" aria-pressed="false">Extensions / 拓展模式</button>
         </div>
         <p class="modehint">Drop multiple files to merge them automatically. Switch to Diff before dropping exactly two files. / 拖入多个文件会自动合并；切到 Diff 后拖入两个文件即可对比。</p>
         <div id="status" aria-live="polite">Booting the in-browser Python runtime…</div>
@@ -120,6 +150,7 @@
             <span class="spacer"></span>
             <button id="btn-preview" type="button" aria-pressed="true">Preview / 预览</button>
             <button id="btn-source" type="button" aria-pressed="false">HTML source / 源码</button>
+            <button id="btn-edit" class="extension-only" type="button" aria-pressed="false">Edit text / 编辑文字</button>
             <button id="btn-fullscreen" type="button">⛶ Fullscreen / 全屏</button>
             <button id="btn-download" type="button">Download .html / 下载</button>
           </div>

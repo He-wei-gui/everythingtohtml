@@ -60,10 +60,12 @@ const els = {
   vExt: document.getElementById("v-ext"),
   btnPreview: document.getElementById("btn-preview"),
   btnSource: document.getElementById("btn-source"),
+  btnEdit: document.getElementById("btn-edit"),
   btnFullscreen: document.getElementById("btn-fullscreen"),
   btnDownload: document.getElementById("btn-download"),
   modeAuto: document.getElementById("mode-auto"),
   modeDiff: document.getElementById("mode-diff"),
+  modeExtensions: document.getElementById("mode-extensions"),
   progress: document.getElementById("progress"),
   progressBar: document.getElementById("progress-bar"),
 };
@@ -74,6 +76,8 @@ const installed = new Set();
 let currentHtml = "";
 let currentName = "result";
 let currentMode = "auto";
+let extensionMode = false;
+let editMode = false;
 
 window.__e2h = { ready: false, lastHtml: null, error: null };
 
@@ -298,6 +302,7 @@ function parserLoadError(name) {
 }
 
 function showResult(name, ext, html) {
+  resetEditMode();
   currentHtml = html;
   currentName = name;
   window.__e2h.lastHtml = html;
@@ -316,6 +321,56 @@ function showResult(name, ext, html) {
   showPreview(true);
 }
 
+function syncPreviewToHtml() {
+  if (!editMode) return;
+  const doc = els.preview.contentDocument;
+  if (!doc || !doc.documentElement || !currentHtml) return;
+  currentHtml = "<!DOCTYPE html>\n" + doc.documentElement.outerHTML + "\n";
+  window.__e2h.lastHtml = currentHtml;
+  els.source.textContent = currentHtml;
+}
+
+function setEditMode(on) {
+  if (on && !extensionMode) {
+    setStatus("Turn on Extensions first. / 请先打开拓展模式。", true);
+    return;
+  }
+  if (!currentHtml) {
+    setStatus("Convert a file first, then edit the preview. / 请先转换文件，再编辑预览。", true);
+    return;
+  }
+  showPreview(true);
+  const doc = els.preview.contentDocument;
+  if (!doc || !doc.body) {
+    setStatus("Preview is not ready for editing yet. / 预览还没准备好编辑。", true);
+    return;
+  }
+  if (!on) syncPreviewToHtml();
+  editMode = on;
+  doc.designMode = on ? "on" : "off";
+  doc.body.setAttribute("contenteditable", String(on));
+  els.btnEdit.setAttribute("aria-pressed", String(on));
+  els.btnEdit.textContent = on ? "Done editing / 完成编辑" : "Edit text / 编辑文字";
+  setStatus(
+    on
+      ? "Edit mode is on — click text in the preview and type. / 编辑模式已开启：点击预览里的文字即可修改。"
+      : "Edit mode is off. / 编辑模式已关闭。",
+  );
+}
+
+function resetEditMode() {
+  editMode = false;
+  if (els.btnEdit) {
+    els.btnEdit.setAttribute("aria-pressed", "false");
+    els.btnEdit.textContent = "Edit text / 编辑文字";
+  }
+  const doc = els.preview.contentDocument;
+  if (doc && doc.body) {
+    doc.designMode = "off";
+    doc.body.removeAttribute("contenteditable");
+  }
+}
+
 function showPreview(preview) {
   els.preview.style.display = preview ? "block" : "none";
   els.source.style.display = preview ? "none" : "block";
@@ -331,6 +386,18 @@ function setMode(mode) {
   currentMode = mode;
   els.modeAuto.setAttribute("aria-pressed", String(mode === "auto"));
   els.modeDiff.setAttribute("aria-pressed", String(mode === "diff"));
+}
+
+function setExtensionMode(on) {
+  extensionMode = on;
+  document.body.classList.toggle("extensions-on", on);
+  els.modeExtensions.setAttribute("aria-pressed", String(on));
+  if (!on && editMode) setEditMode(false);
+  setStatus(
+    on
+      ? "Extensions are on — extra tools are available in the viewer. / 拓展模式已开启：预览工具栏会显示额外工具。"
+      : "Extensions are off — back to reader mode. / 拓展模式已关闭：回到阅读器模式。",
+  );
 }
 
 els.dropzone.addEventListener("click", () => els.fileInput.click());
@@ -370,8 +437,13 @@ document.querySelectorAll(".samples button").forEach((btn) =>
 
 els.modeAuto.addEventListener("click", () => setMode("auto"));
 els.modeDiff.addEventListener("click", () => setMode("diff"));
+els.modeExtensions.addEventListener("click", () => setExtensionMode(!extensionMode));
 els.btnPreview.addEventListener("click", () => showPreview(true));
-els.btnSource.addEventListener("click", () => showPreview(false));
+els.btnSource.addEventListener("click", () => {
+  syncPreviewToHtml();
+  showPreview(false);
+});
+els.btnEdit.addEventListener("click", () => setEditMode(!editMode));
 
 // Fullscreen the whole viewer (toolbar stays, so Esc/Exit/Preview all work).
 els.btnFullscreen.addEventListener("click", () => {
@@ -395,6 +467,7 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 els.btnDownload.addEventListener("click", () => {
+  syncPreviewToHtml();
   const blob = new Blob([currentHtml], { type: "text/html" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
