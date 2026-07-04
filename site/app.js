@@ -325,9 +325,58 @@ function syncPreviewToHtml() {
   if (!editMode) return;
   const doc = els.preview.contentDocument;
   if (!doc || !doc.documentElement || !currentHtml) return;
+  sanitizeEditedDocument(doc);
   currentHtml = "<!DOCTYPE html>\n" + doc.documentElement.outerHTML + "\n";
   window.__e2h.lastHtml = currentHtml;
   els.source.textContent = currentHtml;
+}
+
+function sanitizeEditedDocument(doc) {
+  const blockedElements = [
+    "script",
+    "iframe",
+    "object",
+    "embed",
+    "applet",
+    "frame",
+    "frameset",
+    "base",
+    "form",
+    "input",
+    "button",
+    "textarea",
+    "select",
+    "option",
+    "meta[http-equiv]",
+  ].join(",");
+  doc.querySelectorAll(blockedElements).forEach((node) => node.remove());
+  doc.querySelectorAll("*").forEach((node) => {
+    for (const attr of Array.from(node.attributes)) {
+      const name = attr.name.toLowerCase();
+      const value = attr.value.trim();
+      if (name.startsWith("on") || name === "srcdoc") {
+        node.removeAttribute(attr.name);
+        continue;
+      }
+      if (isUrlAttribute(name) && isUnsafeUrl(value)) {
+        node.removeAttribute(attr.name);
+      }
+    }
+  });
+}
+
+function isUrlAttribute(name) {
+  return ["href", "src", "xlink:href", "action", "formaction"].includes(name);
+}
+
+function isUnsafeUrl(value) {
+  const compact = value.replace(/[\u0000-\u001F\u007F\s]+/g, "").toLowerCase();
+  return (
+    compact.startsWith("javascript:") ||
+    compact.startsWith("vbscript:") ||
+    compact.startsWith("data:text/html") ||
+    compact.startsWith("data:application/xhtml")
+  );
 }
 
 function setEditMode(on) {
