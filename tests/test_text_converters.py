@@ -51,6 +51,27 @@ def test_markdown_math(eth: EverythingToHtml) -> None:
     assert r"\(x^2 + y_i\)" in result.html  # inline math; `_` not treated as emphasis
 
 
+def test_markdown_multiline_matrix_math_survives(eth: EverythingToHtml) -> None:
+    md = r"""
+$$
+\begin{pmatrix} 1 & 3 \\ 5 & 2 \\ 0 & 4 \end{pmatrix}_{3\times2}
+\begin{pmatrix} 3 & 6 & 9 & 4 \\ 2 & 7 & 8 & 3 \end{pmatrix}_{2\times4}
+=
+\begin{pmatrix} 9 & \boxed{?} & 33 & 13 \\ 19 & 44 & 61 & 26 \\ 8 & 28 & 32 & \boxed{?} \end{pmatrix}_{3\times4}
+$$
+"""
+    result = _convert(eth, md, ".md")
+
+    assert '<div class="math-block">' in result.html
+    assert (
+        r"\begin{pmatrix} 1 &amp; 3 \\ 5 &amp; 2 \\ 0 &amp; 4 \end{pmatrix}_{3\times2}"
+        in result.html
+    )
+    assert r"\boxed{?}" in result.html
+    assert "<strong>{3\\times2}</strong>" not in result.html
+    assert "<p>_{3\\times4}" not in result.html
+
+
 def test_markdown_without_math_stays_lightweight(eth: EverythingToHtml) -> None:
     result = _convert(eth, "# Plain\n\nJust prose, no formulas.", ".md")
     assert "mathjax" not in result.html.lower()  # no CDN dependency for plain docs

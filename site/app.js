@@ -7,6 +7,7 @@
 
 const PYODIDE_VERSION = "0.26.4";
 const PYODIDE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+const MATHJAX_URL = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
 
 const EXTRA_PACKAGE = {
   docx: "mammoth",
@@ -78,6 +79,7 @@ let currentName = "result";
 let currentMode = "auto";
 let extensionMode = false;
 let editMode = false;
+let mathJaxPromise = null;
 
 window.__e2h = { ready: false, lastHtml: null, error: null };
 
@@ -313,12 +315,53 @@ function showResult(name, ext, html) {
   try {
     els.preview.removeAttribute("srcdoc");
     els.preview.srcdoc = html;
+    typesetPreviewMath();
   } catch (err) {
     setStatus("Rendered as source (preview unavailable for this file).", true);
   }
   els.source.textContent = html;
   els.viewer.classList.add("show");
   showPreview(true);
+}
+
+function previewNeedsMath(html) {
+  return html.includes('class="math-block"') || html.includes("\\(") || html.includes("\\[");
+}
+
+async function loadMathJax() {
+  if (window.MathJax?.typesetPromise) return window.MathJax;
+  if (mathJaxPromise) return mathJaxPromise;
+  window.MathJax = window.MathJax || {
+    tex: {
+      inlineMath: [["\\(", "\\)"]],
+      displayMath: [["\\[", "\\]"], ["$$", "$$"]],
+    },
+    options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] },
+    startup: { typeset: false },
+  };
+  mathJaxPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = MATHJAX_URL;
+    script.async = true;
+    script.onload = () => window.MathJax.startup.promise.then(() => resolve(window.MathJax));
+    script.onerror = () => reject(new Error("MathJax failed to load"));
+    document.head.appendChild(script);
+  });
+  return mathJaxPromise;
+}
+
+async function typesetPreviewMath() {
+  if (!previewNeedsMath(currentHtml)) return;
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+  const doc = els.preview.contentDocument;
+  if (!doc?.body) return;
+  try {
+    const mathJax = await loadMathJax();
+    mathJax.typesetClear?.([doc.body]);
+    await mathJax.typesetPromise([doc.body]);
+  } catch (err) {
+    setStatus("Math preview could not render, but the source HTML is intact. / 公式预览暂时无法渲染，但源码是完整的。", true);
+  }
 }
 
 function syncPreviewToHtml() {
@@ -484,6 +527,7 @@ document.querySelectorAll(".samples button").forEach((btn) =>
   }),
 );
 
+els.preview.addEventListener("load", () => typesetPreviewMath());
 els.modeAuto.addEventListener("click", () => setMode("auto"));
 els.modeDiff.addEventListener("click", () => setMode("diff"));
 els.modeExtensions.addEventListener("click", () => setExtensionMode(!extensionMode));
